@@ -1,0 +1,290 @@
+{
+  "assets": "https://github.githubassets.com/assets/",
+  "badges": [
+    {
+      "slug": "pull-shark",
+      "name": "Pull Shark",
+      "how": "Open pull requests that get merged.",
+      "track": "mergedPRs",
+      "unit": "merged PRs",
+      "tiers": [
+        {
+          "tier": "default",
+          "threshold": 2,
+          "file": "pull-shark-default-498c279a747d.png"
+        },
+        {
+          "tier": "bronze",
+          "threshold": 16,
+          "file": "pull-shark-bronze-a37accb528d1.png"
+        },
+        {
+          "tier": "silver",
+          "threshold": 128,
+          "file": "pull-shark-silver-0643f87ac9fd.png"
+        },
+        {
+          "tier": "gold",
+          "threshold": 1024,
+          "file": "pull-shark-gold-90985540b385.png"
+        }
+      ],
+      "tip": "Small, focused PRs on projects already in use merge fastest.",
+      "note": "Work in private repositories can't be seen here. The panel on the right shows what GitHub has awarded."
+    },
+    {
+      "slug": "pair-extraordinaire",
+      "name": "Pair Extraordinaire",
+      "how": "Get a pull request merged that has a co-author (Co-authored-by in the commit).",
+      "track": null,
+      "unit": "co-authored PRs",
+      "tiers": [
+        {
+          "tier": "default",
+          "threshold": 1,
+          "file": "pair-extraordinaire-default-579438a20e01.png"
+        },
+        {
+          "tier": "bronze",
+          "threshold": 10,
+          "file": "pair-extraordinaire-bronze-797214f41e7e.png"
+        },
+        {
+          "tier": "silver",
+          "threshold": 24,
+          "file": "pair-extraordinaire-silver-a0b2b472348c.png"
+        },
+        {
+          "tier": "gold",
+          "threshold": 48,
+          "file": "pair-extraordinaire-gold-5335a3b8ae7d.png"
+        }
+      ],
+      "tip": "Add a \"Co-authored-by: Name <email>\" line to a commit before the PR merges.",
+      "note": "Work in private repositories can't be seen here. The panel on the right shows what GitHub has awarded."
+    },
+    {
+      "slug": "galaxy-brain",
+      "name": "Galaxy Brain",
+      "how": "Replies marked as the accepted answer in GitHub Discussions.",
+      "track": "acceptedAnswers",
+      "unit": "accepted answers",
+      "tiers": [
+        {
+          "tier": "default",
+          "threshold": 2,
+          "file": "galaxy-brain-default-847262c21056.png"
+        },
+        {
+          "tier": "bronze",
+          "threshold": 8,
+          "file": "galaxy-brain-bronze-da3c4829fd22.png"
+        },
+        {
+          "tier": "silver",
+          "threshold": 16,
+          "file": "galaxy-brain-silver-2ce8da282a85.png"
+        },
+        {
+          "tier": "gold",
+          "threshold": 32,
+          "file": "galaxy-brain-gold-9c2c03fd1acf.png"
+        }
+      ],
+      "tip": "Answer questions in other repos' Discussions; the asker must mark the reply as the answer.",
+      "note": "Work in private repositories can't be seen here. The panel on the right shows what GitHub has awarded."
+    },
+    {
+      "slug": "starstruck",
+      "name": "Starstruck",
+      "how": "Create a repository that gets starred by other people.",
+      "track": "maxRepoStars",
+      "unit": "stars on your top repo",
+      "tiers": [
+        {
+          "tier": "default",
+          "threshold": 16,
+          "file": "starstruck-default-b6610abad518.png"
+        },
+        {
+          "tier": "bronze",
+          "threshold": 128,
+          "file": "starstruck-bronze-b71ec4d7766a.png"
+        },
+        {
+          "tier": "silver",
+          "threshold": 512,
+          "file": "starstruck-silver-275c101223c0.png"
+        },
+        {
+          "tier": "gold",
+          "threshold": 4096,
+          "file": "starstruck-gold-a35e077693cc.png"
+        }
+      ],
+      "tip": "Polish the README and share the best repo; stars on a single repo are what count.",
+      "tones": [
+        {
+          "tone": "default",
+          "file": "starstruck-default-b6610abad518.png"
+        },
+        {
+          "tone": "light",
+          "file": "starstruck-default--light-a594e2a027e0.png"
+        },
+        {
+          "tone": "light-medium",
+          "file": "starstruck-default--light-medium-65b31ef2251e.png"
+        },
+        {
+          "tone": "medium",
+          "file": "starstruck-default--medium-2670f78c9f2f.png"
+        },
+        {
+          "tone": "medium-dark",
+          "file": "starstruck-default--medium-dark-079b1929d8da.png"
+        },
+        {
+          "tone": "dark",
+          "file": "starstruck-default--dark-e2e2f78e1660.png"
+        }
+      ]
+    },
+    {
+      "slug": "quickdraw",
+      "name": "Quickdraw",
+      "how": "Close an issue or pull request within 5 minutes of opening it (own issues and PRs count).",
+      "track": null,
+      "unit": "",
+      "tiers": [
+        {
+          "tier": "default",
+          "threshold": 1,
+          "file": "quickdraw-default-39c6aec8ff89.png"
+        }
+      ],
+      "tip": "Own issues and PRs count, so it just needs to be closed fast.",
+      "tones": [
+        {
+          "tone": "default",
+          "file": "quickdraw-default-39c6aec8ff89.png"
+        },
+        {
+          "tone": "light",
+          "file": "quickdraw-default--light-8f798b35341a.png"
+        },
+        {
+          "tone": "light-medium",
+          "file": "quickdraw-default--light-medium-5450fadcbe37.png"
+        },
+        {
+          "tone": "medium",
+          "file": "quickdraw-default--medium-0bdca502f5b4.png"
+        },
+        {
+          "tone": "medium-dark",
+          "file": "quickdraw-default--medium-dark-477cc984c57a.png"
+        },
+        {
+          "tone": "dark",
+          "file": "quickdraw-default--dark-32bf331d1328.png"
+        }
+      ],
+      "note": "Work in private repositories can't be seen here. The panel on the right shows what GitHub has awarded."
+    },
+    {
+      "slug": "yolo",
+      "name": "YOLO",
+      "how": "Merge a pull request without a review.",
+      "track": "yoloPRs",
+      "unit": "PRs merged without review",
+      "tiers": [
+        {
+          "tier": "default",
+          "threshold": 1,
+          "file": "yolo-default-be0bbff04951.png"
+        }
+      ],
+      "tip": "Merge a PR without a review, e.g. in a repo you own.",
+      "note": "Work in private repositories can't be seen here. The panel on the right shows what GitHub has awarded."
+    },
+    {
+      "slug": "public-sponsor",
+      "name": "Public Sponsor",
+      "how": "Sponsor an open source project through GitHub Sponsors (publicly).",
+      "track": "sponsorships",
+      "unit": "public sponsorships",
+      "tiers": [
+        {
+          "tier": "default",
+          "threshold": 1,
+          "file": "public-sponsor-default-9fa68986b057.png"
+        }
+      ],
+      "tip": "Sponsor any maintainer through GitHub Sponsors and keep it public.",
+      "note": "Work in private repositories can't be seen here. The panel on the right shows what GitHub has awarded."
+    },
+    {
+      "slug": "mars-2020-contributor",
+      "name": "Mars 2020 Contributor",
+      "how": "Retired. Was given for contributing to a repo used by the 2020 Mars helicopter mission.",
+      "retired": true,
+      "track": null,
+      "unit": "",
+      "tiers": [
+        {
+          "tier": "default",
+          "threshold": 1,
+          "file": "mars-2020-contributor-default-c9cad8495acf.png"
+        }
+      ]
+    },
+    {
+      "slug": "arctic-code-vault-contributor",
+      "name": "Arctic Code Vault Contributor",
+      "how": "Retired. Was given for code archived in the 2020 Arctic Code Vault.",
+      "retired": true,
+      "track": null,
+      "unit": "",
+      "tiers": [
+        {
+          "tier": "default",
+          "threshold": 1,
+          "file": "arctic-code-vault-contributor-default-df8d74122a06.png"
+        }
+      ]
+    }
+  ],
+  "highlights": [
+    {
+      "name": "GitHub Pro",
+      "match": "pro",
+      "how": "Has a GitHub Pro plan."
+    },
+    {
+      "name": "Developer Program Member",
+      "match": "developer program",
+      "how": "Member of the GitHub Developer Program."
+    },
+    {
+      "name": "Security Bug Bounty Hunter",
+      "match": "bug bounty",
+      "how": "Reported a security vulnerability through GitHub's bug bounty."
+    },
+    {
+      "name": "GitHub Campus Expert",
+      "match": "campus expert",
+      "how": "Completed the GitHub Campus Experts program."
+    },
+    {
+      "name": "Security Advisory Credit",
+      "match": "security advisory",
+      "how": "Credited on a GitHub security advisory."
+    },
+    {
+      "name": "GitHub Star",
+      "match": "github star",
+      "how": "Named a GitHub Star by the community program."
+    }
+  ]
+}

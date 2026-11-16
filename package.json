@@ -1,0 +1,13 @@
+{
+  "name": "github-badge-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "See a GitHub profile's achievements and progress toward the next tier.",
+  "scripts": {
+    "start": "node run-all.js",
+    "server": "node server/server.js",
+    "web": "node web/serve.js",
+    "test": "node --test server/"
+  },
+  "engines": { "node": ">=18" }
+}

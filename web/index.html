@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d12">
+  <title>Badgepath: your next GitHub achievement</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="favicon-64.png" type="image/png">
+</head>
+<body class="home">
+  <header class="topbar">
+    <a class="brand" href="./" id="brand" aria-label="Badgepath home"><img class="brand-logo" src="logo-full.png" alt="Badgepath" height="40"></a>
+    <form class="mini-search" id="topForm" autocomplete="off">
+      <label class="mini-field"><span>github.com/</span><input id="topUser" type="text" placeholder="another username" autocapitalize="off" spellcheck="false" aria-label="Look up another GitHub username"></label>
+      <button type="submit" id="topGo" aria-label="Look up">Go</button>
+    </form>
+  </header>
+
+  <section id="home" class="hero" aria-label="Look up a GitHub profile">
+    <div class="bg" aria-hidden="true">
+      <svg class="hex h1" data-skip="1" viewBox="0 0 64 64"><polygon points="32,3 58,17.5 58,46.5 32,61 6,46.5 6,17.5"/></svg>
+      <svg class="hex h2" viewBox="0 0 64 64"><polygon points="32,3 58,17.5 58,46.5 32,61 6,46.5 6,17.5"/></svg>
+      <svg class="hex h3" viewBox="0 0 64 64"><polygon points="32,3 58,17.5 58,46.5 32,61 6,46.5 6,17.5"/></svg>
+      <svg class="hex h4" viewBox="0 0 64 64"><polygon points="32,3 58,17.5 58,46.5 32,61 6,46.5 6,17.5"/></svg>
+      <svg class="hex h5" viewBox="0 0 64 64"><polygon points="32,3 58,17.5 58,46.5 32,61 6,46.5 6,17.5"/></svg>
+    </div>
+    <div class="hero-inner">
+      <img class="hero-logo" src="logo-mark.png" alt="" width="120" height="120">
+      <h1>Your next badge is <span class="accent">closer</span> than you think.</h1>
+      <p>Type a GitHub username to see which achievements it has earned and how close the next tier is.</p>
+      <form class="search" id="homeForm" autocomplete="off">
+        <label class="search-field"><span>github.com/</span><input id="homeUser" type="text" placeholder="username" autocapitalize="off" spellcheck="false" aria-label="GitHub username" autofocus></label>
+        <button type="submit" id="homeGo">View profile</button>
+      </form>
+      <p id="homeStatus" class="status-line" role="status"></p>
+      <div class="examples">Try <button type="button" class="example" data-user="yyx990803">yyx990803</button><button type="button" class="example" data-user="torvalds">torvalds</button><button type="button" class="example" data-user="raynerdcunha">raynerdcunha</button></div>
+      <p class="fine">Only public data. No login.</p>
+    </div>
+  </section>
+
+  <main id="results" class="shell dashboard" hidden>
+    <p id="topStatus" class="status-line" role="status"></p>
+    <div class="dashboard-grid">
+      <div class="dashboard-main">
+        <section id="profile" aria-label="GitHub profile summary"></section>
+        <section id="stats" class="stats" aria-label="GitHub statistics"></section>
+
+        <section class="achievement-section">
+          <div class="section-head">
+        <div><h2>Achievement progress</h2><p>See where you are, what is next, and what GitHub has already awarded.</p></div>
+        <div class="head-side">
+          <div id="live" class="live" hidden><span class="dot"></span><span id="liveText"></span><button id="liveBtn" type="button">Pause</button></div>
+        </div>
+          </div>
+          <div id="grid" class="badge-list"></div>
+        </section>
+
+        <section id="hlWrap" class="block" hidden>
+      <div class="section-head"><div><h2>Profile highlights</h2><p>Shown in the profile sidebar. These are not achievements, but GitHub awards them too.</p></div></div>
+      <div id="highlights" class="highlights"></div>
+    </section>
+
+        <section id="moreWrap" class="block" hidden>
+          <div class="section-head"><div><h2>More about this profile</h2></div></div>
+          <div id="extras" class="extras"></div>
+        </section>
+
+        <div class="note">Progress is an estimate from public activity, and GitHub can take a while to show a badge. The right-hand panel shows what GitHub is really displaying on the profile. Pair Extraordinaire and Quickdraw cannot be counted from public data, and a profile that hides achievements shows none.</div>
+        <div id="copyWrap" class="copy-wrap"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="shell footer"><span>Copyright © 2026 <a href="https://github.com/raynerdcunha" target="_blank" rel="noopener">Rayner Dcunha</a></span><span>Not affiliated with <a href="https://github.com" target="_blank" rel="noopener">GitHub</a></span></footer>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
