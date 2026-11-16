@@ -1,7 +1,15 @@
 {
   "outputDirectory": "web",
-  "functions": { "api/badges.js": { "maxDuration": 30 } },
+  "functions": {
+    "api/badges.js": {
+      "maxDuration": 30,
+      "includeFiles": "server/src/**"
+    }
+  },
   "rewrites": [
-    { "source": "/((?!api/|.*\\..*).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
   ]
 }
