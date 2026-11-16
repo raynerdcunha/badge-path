@@ -77,7 +77,7 @@ The application works without a `.env` file.
 To customize the local API, copy `server/.env.example` to `server/.env` and change the values as needed:
 
 | Variable | Default | Description |
-|---|---:|---|
+|---|:---|---|
 | `PORT` | `3001` | Port used by the local API server |
 | `ALLOWED_ORIGINS` | `http://localhost:5173`<br>`http://127.0.0.1:5173` | Browser origins allowed to call the local API, separated by commas |
 | `RATE_LIMIT` | `60` | Maximum API requests per address per minute |
