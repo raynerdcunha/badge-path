@@ -79,7 +79,7 @@ To customize the local API, copy `server/.env.example` to `server/.env` and chan
 | Variable | Default | Description |
 |---|---:|---|
 | `PORT` | `3001` | Port used by the local API server |
-| `ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated list of browser origins allowed to call the local API |
+| `ALLOWED_ORIGINS` | `http://localhost:5173`<br>`http://127.0.0.1:5173` | Browser origins allowed to call the local API, separated by commas |
 | `RATE_LIMIT` | `60` | Maximum API requests per address per minute |
 
 Environment variables already set by the hosting environment take precedence over values in `server/.env`.
@@ -95,30 +95,17 @@ Keep the token in the server environment. Never put it in frontend files or comm
 The repository includes `vercel.json` and the serverless API function in `api/`.
 
 1. Push the project to GitHub.
-2. Import the repository into [Vercel](https://vercel.com/).
-3. Keep the project root as the **Root Directory**.
-4. Use the repository's included `vercel.json` configuration.
-5. Deploy.
+2. Import the repository into [Vercel](https://vercel.com/) and choose a project name (it becomes `<name>.vercel.app`).
+3. Leave every setting at its default: no Root Directory, no Output Directory override.
+4. Deploy. `vercel.json` publishes `web/` and runs the API from `api/`.
 
 The Vercel configuration serves the static frontend from `web/` and exposes the API through `/api/badges`.
 
-### 🌐 Deployment environment variables
+### 🌐 Deployment settings
 
-The API defaults its allowed browser origin to:
+The page and the API are served from the same Vercel address, so no CORS or origin setting is needed.
 
-```text
-https://raynerdcunha.github.io
-```
-
-If your frontend is hosted at a different domain, set the Vercel environment variable:
-
-```text
-ALLOWED_ORIGIN=https://your-domain.example
-```
-
-Use the origin only — do not add a page path or trailing route. Redeploy after changing environment variables.
-
-You may also add `GITHUB_TOKEN` as a Vercel environment variable if needed. Do not expose it to the browser.
+You may add `GITHUB_TOKEN` as a Vercel environment variable if GitHub's anonymous rate limit becomes a problem. Do not expose it to the browser.
 
 ## 🔌 API
 
@@ -141,8 +128,6 @@ Returns a simple health response:
 ```json
 {"ok":true}
 ```
-
-The local API also supports `OPTIONS` requests for CORS preflight.
 
 ## 🔍 How it works
 
