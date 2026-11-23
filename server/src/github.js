@@ -5,9 +5,13 @@
 const { Cache } = require('./cache');
 
 const UA = 'github-badge-tracker (local project)';
+// Every outbound request gets a deadline so one stuck GitHub call cannot hang all callers sharing it.
+const gfetch = (url, opts) => fetch(url, Object.assign({ signal: AbortSignal.timeout(10000) }, opts));
+// Reject paths with "." / ".." segments, which URL cleanup would turn into a different address.
+const NO_DOTS = (p) => !p.split('/').some((s) => /^\.+$/.test(s));
 
 // /assets/<slug>-<tier>[--<tone>]-<12 hex>.png
-const SRC = /\/assets\/([a-z0-9-]+?)-(default|bronze|silver|gold)(?:--([a-z-]+?))?-([0-9a-f]{12})\.png/;
+const SRC = /^https:\/\/github\.githubassets\.com\/assets\/([a-z0-9-]+?)-(default|bronze|silver|gold)(?:--([a-z-]+?))?-([0-9a-f]{12})\.png/;
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -67,7 +71,7 @@ function parseAchievementDetail(html) {
     let m;
     const rest = html.slice(i);
     while ((m = re.exec(rest))) {
-      const safe = m[1] && /^\/[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._\/-]*)?$/.test(m[1]);
+      const safe = m[1] && NO_DOTS(m[1]) && /^\/[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._\/-]*)?$/.test(m[1]);
       events.push({
         // The text can hold links (co-author names): keep the words, drop the markup, keep it short.
         text: (() => {
@@ -134,7 +138,7 @@ function apiHeaders() {
 }
 
 async function getJson(url) {
-  const r = await fetch(url, { headers: apiHeaders() });
+  const r = await gfetch(url, { headers: apiHeaders() });
   if (!r.ok) throw new Error('GitHub API ' + r.status);
   return r.json();
 }
@@ -146,7 +150,7 @@ const cache = new Cache();
 const TTL = { page: 5e3, contributions: 15e3, light: 60e3, search: 300e3, detail: 864e5, pr: 2592e6 };
 
 async function fetchContributions(user) {
-  const r = await fetch(`https://github.com/users/${user}/contributions`, {
+  const r = await gfetch(`https://github.com/users/${user}/contributions`, {
     headers: { 'User-Agent': UA, Accept: 'text/html' },
   });
   if (!r.ok) throw new Error('contributions ' + r.status);
@@ -217,7 +221,7 @@ async function gather(user) {
 async function fetchProfilePage(user) {
   let page;
   try {
-    page = await fetch(`https://github.com/${user}`, { headers: { 'User-Agent': UA, Accept: 'text/html' } });
+    page = await gfetch(`https://github.com/${user}`, { headers: { 'User-Agent': UA, Accept: 'text/html' } });
   } catch (e) {
     throw new HttpError(502, 'Could not reach GitHub.');
   }
@@ -229,7 +233,7 @@ async function fetchProfilePage(user) {
 }
 
 async function fetchAchievementDetail(user, slug) {
-  const r = await fetch(`https://github.com/users/${user}/achievements/${slug}/detail`, {
+  const r = await gfetch(`https://github.com/users/${user}/achievements/${slug}/detail`, {
     headers: { 'User-Agent': UA, Accept: 'text/html', 'X-Requested-With': 'XMLHttpRequest' },
   });
   if (!r.ok) throw new Error('detail ' + r.status);
@@ -256,7 +260,7 @@ async function lookup(user) {
   let budget = 8;
   await Promise.allSettled(earned.flatMap((e) => (e.events || []).map(async (ev) => {
     const m = ev.url && ev.url.match(/^https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/pull\/(\d+)$/);
-    if (!m || budget <= 0) return;
+    if (!m || !NO_DOTS(ev.url) || budget <= 0) return;
     if (!cache.has('pr:' + ev.url)) budget -= 1;
     const j = await cache.get('pr:' + ev.url, TTL.pr, () => getJson(`https://api.github.com/repos/${m[1]}/${m[2]}/pulls/${m[3]}`));
     if (j && j.merged_at && !Number.isNaN(Date.parse(j.merged_at))) ev.date = new Date(j.merged_at).toISOString();

@@ -30,6 +30,7 @@ class Cache {
         return value;
       } catch (e) {
         this.fails.set(key, { err: e, at: this.now() });
+        this.trim();
         if (hit) return hit.value; // stale beats broken
         throw e;
       } finally {
@@ -45,6 +46,8 @@ class Cache {
   }
 
   trim() {
+    const t = this.now();
+    for (const [k, f] of this.fails) if (t - f.at >= this.failMs) this.fails.delete(k);
     if (this.items.size <= 2000) return;
     const oldest = [...this.items.entries()].sort((a, b) => a[1].at - b[1].at).slice(0, 500);
     oldest.forEach(([k]) => this.items.delete(k));

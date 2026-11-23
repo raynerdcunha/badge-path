@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+<defs>
+ <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd2a0"/><stop offset=".55" stop-color="#ff9a4a"/><stop offset="1" stop-color="#c8571a"/></linearGradient>
+ <linearGradient id="face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9c4d"/><stop offset="1" stop-color="#c4561a"/></linearGradient>
+ <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+ <linearGradient id="ring" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffb877"/><stop offset=".5" stop-color="#e8782a"/><stop offset="1" stop-color="#ffb877"/></linearGradient>
+ <linearGradient id="star" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#ffd9b0"/></linearGradient>
+ <clipPath id="back"><rect x="-40" y="-200" width="340" height="340"/></clipPath>
+ <clipPath id="front"><rect x="-40" y="140" width="340" height="300"/></clipPath>
+ <clipPath id="faceclip"><polygon points="128,70 172,95 172,145 128,170 84,145 84,95"/></clipPath>
+</defs>
+<g transform="rotate(-24 128 140)"><ellipse cx="128" cy="140" rx="108" ry="36" fill="none" stroke="#a8431a" stroke-width="13" clip-path="url(#back)"/><ellipse cx="128" cy="140" rx="108" ry="36" fill="none" stroke="url(#ring)" stroke-width="9" clip-path="url(#back)"/></g>
+<polygon points="128,44 192,81 192,155 128,192 64,155 64,81" fill="url(#rim)" stroke="#a8431a" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="128,70 172,95 172,145 128,170 84,145 84,95" fill="url(#face)" stroke="#a8431a" stroke-width="2.5" stroke-linejoin="round"/>
+<g clip-path="url(#faceclip)"><ellipse cx="128" cy="86" rx="52" ry="26" fill="url(#shine)"/></g>
+<polyline points="70,84 128,50 186,84" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M128 88 Q131 113 160 120 Q131 127 128 152 Q125 127 96 120 Q125 113 128 88Z" fill="url(#star)"/>
+<g transform="rotate(-24 128 140)"><ellipse cx="128" cy="140" rx="108" ry="36" fill="none" stroke="#a8431a" stroke-width="13" clip-path="url(#front)"/><ellipse cx="128" cy="140" rx="108" ry="36" fill="none" stroke="url(#ring)" stroke-width="9" clip-path="url(#front)"/><ellipse cx="128" cy="137.5" rx="108" ry="36" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2.2" clip-path="url(#front)"/></g>
+<path d="M214 40 Q216 56 232 60 Q216 64 214 80 Q212 64 196 60 Q212 56 214 40Z" fill="url(#star)" stroke="#a8431a" stroke-width="2" stroke-linejoin="round"/>
+</svg>

@@ -11,7 +11,7 @@ const TYPES = {
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
 };
-const PUBLIC = new Set(['index.html', 'style.css', 'app.js', 'config.js', 'badges.json', 'favicon.svg', 'logo-mark.png', 'logo-mark-sm.png', 'logo-full.png', 'favicon-64.png']);
+const PUBLIC = new Set(['index.html', 'style.css', 'app.js', 'config.js', 'badges.json', 'favicon.svg', 'logo-mark.png', 'logo-mark-sm.png', 'logo-full.png', 'logo-mark-light.svg', 'logo-mark-dark.svg', 'logo-mark-light.png', 'logo-mark-dark.png', 'logo-full-dark.png', 'logo-full-light.png', 'favicon-64.png', 'favicon-64-light.png']);
 
 http.createServer((req, res) => {
   let pathname;
@@ -21,6 +21,7 @@ http.createServer((req, res) => {
     res.writeHead(400, { 'Content-Type': 'text/plain' });
     return res.end('Bad request');
   }
+  if (pathname === '/favicon.ico') pathname = '/favicon-64.png';
   let name = pathname === '/' ? 'index.html' : pathname.replace(/^\/+|\/+$/g, '');
   // /<github username> is the same page; the page reads the name from the address.
   // Anything that is not a file (no extension) is the page; it reads the username from the address.
@@ -34,7 +35,7 @@ http.createServer((req, res) => {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       return res.end('Not found');
     }
-    res.writeHead(200, { 'Content-Type': TYPES[path.extname(name)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+    res.writeHead(200, { 'Content-Type': TYPES[path.extname(name)] || 'application/octet-stream', 'Cache-Control': 'no-store', 'Content-Security-Policy': "default-src 'self'; img-src 'self' data: https://github.githubassets.com https://avatars.githubusercontent.com; connect-src 'self' http://localhost:3001; object-src 'none'; base-uri 'self'; frame-ancestors 'none'" });
     res.end(data);
   });
 }).listen(PORT, '127.0.0.1', () => console.log(`Web page on http://localhost:${PORT}`));

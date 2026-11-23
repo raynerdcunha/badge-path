@@ -7,7 +7,7 @@
     "start": "node run-all.js",
     "server": "node server/server.js",
     "web": "node web/serve.js",
-    "test": "node --test server/"
+    "test": "node --test \"server/test/*.test.js\""
   },
   "engines": { "node": ">=18" }
 }
