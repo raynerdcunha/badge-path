@@ -17,6 +17,7 @@ Badgepath is a lightweight GitHub achievement tracker. Enter a GitHub username o
 - **Repository insights** — highlights top repositories and language distribution.
 - **Profile highlights** — displays supported GitHub profile highlights separately from achievements.
 - **Live refresh** — periodically refreshes the profile data, with a pause control.
+- **Light and dark themes** — switch with the theme button; your choice is remembered in the browser.
 - **Responsive interface** — works on desktop and mobile, with a print-friendly layout.
 
 ## Interface
@@ -166,14 +167,17 @@ badge-path/
 │   │   ├── cache.js       # In-memory response cache
 │   │   ├── github.js      # GitHub data retrieval and parsing
 │   │   └── ratelimit.js   # Per-address request limiter
-│   └── test/              # API and utility tests
+│   └── test/              # API and utility tests (github, server, fixes)
 ├── web/
 │   ├── index.html         # Frontend page
 │   ├── app.js             # Search, rendering, and progress logic
 │   ├── style.css          # Interface styling
 │   ├── config.js          # Frontend runtime configuration
 │   ├── badges.json        # Achievement catalogue and tier thresholds
+│   ├── logo-*.png/.svg     # Logos for the light and dark themes
+│   ├── favicon-64*.png    # Browser tab icons (dark and light)
 │   └── serve.js           # Local static web server
+├── .gitattributes         # Keeps line endings consistent (LF)
 ├── run-all.js             # Starts the local API and web servers
 ├── start.bat              # Windows launcher
 ├── package.json
@@ -188,11 +192,7 @@ Run the test suite from the project root:
 npm test
 ```
 
-Or run the Node.js test files directly:
-
-```bash
-node --test server/
-```
+`npm test` runs `node --test "server/test/*.test.js"`. Use that exact pattern if you run the tests directly, because pointing `node --test` at the `server/` folder can hang on newer Node versions.
 
 The tests cover GitHub page parsing, contribution streak calculations, caching, rate limiting, request validation, CORS behavior, and API responses.
 
@@ -203,6 +203,8 @@ The tests cover GitHub page parsing, contribution streak calculations, caching, 
 - The local API binds to `127.0.0.1`.
 - The local API validates usernames, checks browser origins, and applies a per-address rate limit.
 - The local web server serves an explicit allowlist of frontend files.
+- Security headers (Content-Security-Policy and others) are sent by the local web server and by Vercel through `vercel.json`.
+- The Vercel API applies a per-address rate limit, and requests to GitHub time out after 10 seconds.
 - Any optional GitHub token belongs in server-side environment variables only.
 
 ## 🙌 Credits
