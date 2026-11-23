@@ -28,7 +28,6 @@ const homeEl = $('home'), resultsEl = $('results');
 const moreWrap = $('moreWrap');
 const profileEl = $('profile'), statsEl = $('stats'), grid = $('grid'), extrasEl = $('extras'), copyWrap = $('copyWrap');
 const hlWrap = $('hlWrap'), hlEl = $('highlights');
-const nextEl = $('nextUp');
 
 let catalog = null;
 let lastUser = '';
@@ -536,112 +535,6 @@ function renderExtras(data) {
   }
 }
 
-// ---- "Next unlock": the badge you are closest to, with the next tier shown as a locked medal ----
-function svgEl(tag, attrs) {
-  const n = document.createElementNS('http://www.w3.org/2000/svg', tag);
-  Object.keys(attrs || {}).forEach((k) => n.setAttribute(k, attrs[k]));
-  return n;
-}
-function lockIcon() {
-  const s = svgEl('svg', { viewBox: '0 0 24 24', class: 'nx-lock', 'aria-hidden': 'true' });
-  s.appendChild(svgEl('rect', { x: '5', y: '11', width: '14', height: '10', rx: '2.5', fill: 'currentColor' }));
-  s.appendChild(svgEl('path', { d: 'M8 11V8a4 4 0 0 1 8 0v3', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.4', 'stroke-linecap': 'round' }));
-  return s;
-}
-function arrowIcon() {
-  const s = svgEl('svg', { viewBox: '0 0 40 20', class: 'nx-arrow', 'aria-hidden': 'true' });
-  s.appendChild(svgEl('path', { d: 'M2 10h32M26 3l8 7-8 7', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
-  return s;
-}
-// A medal for one tier. `locked` greys it out and adds a padlock.
-function nxMedal(badge, idx, locked, extra) {
-  const box = el('div', 'nx-medal' + (locked ? ' locked' : '') + (extra ? ' ' + extra : ''));
-  if (idx < 0) {
-    box.classList.add('start');
-    box.appendChild(art(hexSvg('#4a5568'), 'default', ''));
-  } else {
-    const t = badge.tiers[idx];
-    box.appendChild(art(catalog.assets + t.file, t.tier,
-      badge.name + (badge.tiers.length > 1 ? ' ' + TIER_LABEL[t.tier] : '') + (locked ? ', locked' : '')));
-  }
-  if (locked) box.appendChild(lockIcon());
-  return box;
-}
-function nxTierName(badge, idx) {
-  return badge.tiers.length > 1 ? TIER_LABEL[badge.tiers[idx].tier] : '';
-}
-
-function renderNextUp(data, earnedBySlug) {
-  nextEl.textContent = '';
-  const items = [];
-  catalog.badges.forEach((badge) => {
-    if (badge.retired) return;
-    const a = analyse(badge, earnedBySlug.get(badge.slug) || null, data.stats);
-    if (a.next) items.push({ badge, a, idx: a.tiers.indexOf(a.next) });
-  });
-  const key = (i) => (i.a.pct === null ? -1 : i.a.pct);
-  items.sort((x, y) => key(y) - key(x));
-  const hero = items.find((i) => i.a.pct !== null);
-  if (!hero) { nextEl.hidden = true; return; }
-
-  const { badge, a, idx } = hero;
-  const remaining = Math.max(0, a.next.threshold - a.value);
-  const unit = badge.unit || '';
-  const tierName = nxTierName(badge, idx);
-
-  const main = el('div', 'nx-hero');
-  main.appendChild(el('div', 'nx-kicker', 'Next unlock'));
-  const row = el('div', 'nx-row');
-  const from = el('div', 'nx-from');
-  from.appendChild(nxMedal(badge, idx - 1, false));
-  from.appendChild(el('div', 'nx-cap', idx > 0 ? nxTierName(badge, idx - 1) || badge.name : 'Start'));
-  row.appendChild(from);
-  row.appendChild(arrowIcon());
-  const to = el('div', 'nx-to');
-  to.appendChild(nxMedal(badge, idx, true, 'big'));
-  to.appendChild(el('div', 'nx-cap', (tierName || badge.name) + ' · locked'));
-  row.appendChild(to);
-  const txt = el('div', 'nx-text');
-  txt.appendChild(el('div', 'nx-title', remaining.toLocaleString() + (unit ? ' ' + unit : '') + ' to ' + badge.name + (tierName ? ' ' + tierName : '')));
-  txt.appendChild(el('div', 'nx-sub',
-    'You have ' + a.value.toLocaleString() + '. ' + (tierName || badge.name) + ' unlocks at ' + a.next.threshold.toLocaleString() + '.' + (badge.how ? ' ' + badge.how : '')));
-  row.appendChild(txt);
-  main.appendChild(row);
-
-  const prevThr = idx > 0 ? a.tiers[idx - 1].threshold : 0;
-  const bar = el('div', 'tl');
-  const fill = el('div', 'tfill');
-  fill.style.width = a.pct + '%';
-  bar.appendChild(fill);
-  main.appendChild(bar);
-  const ends = el('div', 'nx-ends');
-  ends.appendChild(el('span', null, prevThr.toLocaleString()));
-  ends.appendChild(el('span', 'nx-mid', a.pct + '% of the way'));
-  ends.appendChild(el('span', null, a.next.threshold.toLocaleString()));
-  main.appendChild(ends);
-  nextEl.appendChild(main);
-
-  const others = items.filter((i) => i !== hero).slice(0, 3);
-  if (others.length) {
-    const side = el('div', 'nx-also');
-    side.appendChild(el('div', 'nx-kicker', 'Also within reach'));
-    others.forEach((o) => {
-      const r = el('div', 'nx-item');
-      r.appendChild(nxMedal(o.badge, o.idx, true, 'sm'));
-      const mid = el('div', 'nx-item-text');
-      const tn = nxTierName(o.badge, o.idx);
-      mid.appendChild(el('div', 'nx-item-name', o.badge.name + (tn ? ' ' + tn : '')));
-      mid.appendChild(el('div', 'nx-item-sub', o.a.pct !== null
-        ? Math.max(0, o.a.next.threshold - o.a.value).toLocaleString() + ' more' + (o.badge.unit ? ' ' + o.badge.unit : '')
-        : "GitHub doesn't publish this count"));
-      r.appendChild(mid);
-      r.appendChild(el('div', 'nx-item-pct', o.a.pct !== null ? o.a.pct + '%' : '?'));
-      side.appendChild(r);
-    });
-    nextEl.appendChild(side);
-  }
-}
-
 function render(data) {
   grid.textContent = '';
   const earnedBySlug = new Map(data.earned.map((e) => [e.slug, e]));
@@ -692,7 +585,6 @@ function render(data) {
 
   renderProfile(data, earnedCount, total, tiersGot, tiersAll);
   renderStats(data);
-  renderNextUp(data, earnedBySlug);
   renderExtras(data);
   renderHighlights(data);
   moreWrap.hidden = extrasEl.children.length === 0;
@@ -733,8 +625,7 @@ async function loadCatalog() {
 }
 
 function clearAll() {
-  [profileEl, statsEl, grid, extrasEl, hlEl, copyWrap, nextEl].forEach((n) => { n.textContent = ''; });
-  nextEl.hidden = true;
+  [profileEl, statsEl, grid, extrasEl, hlEl, copyWrap].forEach((n) => { n.textContent = ''; });
   moreWrap.hidden = true;
   hlWrap.hidden = true;
 }

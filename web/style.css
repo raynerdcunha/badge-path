@@ -484,38 +484,6 @@ body.home .footer{width:min(1120px,calc(100% - 44px))}
 .bl-text b{font-weight:800;color:#a47dff}
 :root[data-theme="light"] .bl-text{color:#1c2420}
 :root[data-theme="light"] .bl-text b{color:#b04a12}
-
-/* ---- Next unlock ---- */
-.nextup{display:flex;flex-wrap:wrap;gap:18px;margin:0 0 38px}
-.nextup[hidden]{display:none}
-.nx-kicker{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
-.nx-hero{flex:1.5 1 520px;min-width:0;background:var(--surface);border:1px solid var(--accent);border-radius:20px;padding:24px 26px;display:flex;flex-direction:column;gap:16px}
-.nx-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-.nx-from,.nx-to{display:flex;flex-direction:column;align-items:center;text-align:center}
-.nx-medal{position:relative;width:84px;height:84px;display:grid;place-items:center}
-.nx-medal img{width:100%;height:100%;object-fit:contain}
-.nx-medal.big{width:116px;height:116px}
-.nx-medal.sm{width:46px;height:46px;flex:none}
-.nx-medal.start img{opacity:.5}
-.nx-medal.locked img{filter:grayscale(1) brightness(.8);opacity:.8}
-.nx-lock{position:absolute;right:2px;bottom:2px;width:26%;height:26%;min-width:16px;min-height:16px;color:var(--text);background:var(--surface);border:2px solid var(--line2);border-radius:50%;padding:3px;box-sizing:content-box}
-.nx-cap{font-size:12px;color:var(--muted);margin-top:6px}
-.nx-arrow{width:38px;height:19px;color:var(--accent);flex:none}
-.nx-text{flex:1 1 230px;min-width:0}
-.nx-title{font-size:clamp(22px,3vw,30px);font-weight:760;letter-spacing:-.03em;line-height:1.15}
-.nx-sub{font-size:14px;color:var(--muted);margin-top:8px;line-height:1.5}
-.nextup .tl{margin-top:4px}
-.nx-ends{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.nx-mid{color:var(--text);font-weight:650}
-.nx-also{flex:1 1 300px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:10px}
-.nx-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px}
-.nx-item-text{flex:1;min-width:0}
-.nx-item-name{font-size:14px;font-weight:650}
-.nx-item-sub{font-size:12.5px;color:var(--muted);margin-top:1px}
-.nx-item-pct{font-size:13px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
-@media(max-width:560px){.nx-hero{padding:18px 16px}.nx-medal{width:64px;height:64px}.nx-medal.big{width:88px;height:88px}.nx-arrow{width:26px}}
-@media print{.nextup{display:none!important}}
-
 /* New logo artwork is not square: keep its proportions */
 .brand-lock img{width:auto;height:40px;object-fit:contain}
 .hero-logo{width:auto;height:150px;max-width:none;object-fit:contain}
