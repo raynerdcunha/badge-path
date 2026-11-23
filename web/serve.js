@@ -11,7 +11,7 @@ const TYPES = {
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
 };
-const PUBLIC = new Set(['index.html', 'style.css', 'app.js', 'config.js', 'badges.json', 'favicon.svg', 'logo-mark.png', 'logo-mark-sm.png', 'logo-full.png', 'logo-mark-light.svg', 'logo-mark-dark.svg', 'logo-mark-light.png', 'logo-mark-dark.png', 'logo-full-dark.png', 'logo-full-light.png', 'favicon-64.png', 'favicon-64-light.png']);
+const PUBLIC = new Set(['index.html', 'style.css', 'app.js', 'config.js', 'badges.json', 'logo-mark-light.png', 'logo-mark-dark.png', 'logo-full-dark.png', 'logo-full-light.png', 'favicon-64.png', 'favicon-64-light.png']);
 
 http.createServer((req, res) => {
   let pathname;

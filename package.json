@@ -2,6 +2,7 @@
   "name": "github-badge-tracker",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "description": "See a GitHub profile's achievements and progress toward the next tier.",
   "scripts": {
     "start": "node run-all.js",

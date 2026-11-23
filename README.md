@@ -82,6 +82,7 @@ To customize the local API, copy `server/.env.example` to `server/.env` and chan
 | `PORT` | `3001` | Port used by the local API server |
 | `ALLOWED_ORIGINS` | `http://localhost:5173`<br>`http://127.0.0.1:5173` | Browser origins allowed to call the local API, separated by commas |
 | `RATE_LIMIT` | `60` | Maximum API requests per address per minute |
+| `WEB_PORT` | `5173` | Port used by the local web server (set it in your shell; `server/.env` is not read by the web server) |
 
 Environment variables already set by the hosting environment take precedence over values in `server/.env`.
 
@@ -174,7 +175,7 @@ badge-path/
 │   ├── style.css          # Interface styling
 │   ├── config.js          # Frontend runtime configuration
 │   ├── badges.json        # Achievement catalogue and tier thresholds
-│   ├── logo-*.png/.svg     # Logos for the light and dark themes
+│   ├── logo-*.png         # Logos for the light and dark themes
 │   ├── favicon-64*.png    # Browser tab icons (dark and light)
 │   └── serve.js           # Local static web server
 ├── .gitattributes         # Keeps line endings consistent (LF)
@@ -203,7 +204,7 @@ The tests cover GitHub page parsing, contribution streak calculations, caching, 
 - The local API binds to `127.0.0.1`.
 - The local API validates usernames, checks browser origins, and applies a per-address rate limit.
 - The local web server serves an explicit allowlist of frontend files.
-- Security headers (Content-Security-Policy and others) are sent by the local web server and by Vercel through `vercel.json`.
+- The local web server sends a Content-Security-Policy header. On Vercel, `vercel.json` adds that policy plus `X-Frame-Options`, `X-Content-Type-Options` and `Referrer-Policy`.
 - The Vercel API applies a per-address rate limit, and requests to GitHub time out after 10 seconds.
 - Any optional GitHub token belongs in server-side environment variables only.
 
