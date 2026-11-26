@@ -797,7 +797,7 @@ $('brand').addEventListener('click', (ev) => {
   route();
 });
 
-// The address is the source of truth. Accepts /<user>, /<user>/anything, /@user, /github.com/<user>
+// The address is the source of truth. Accepts /<user>, /@user, /github.com/<user>
 // and the older ?user=<user>. Returns { user } when valid, { bad } when something was typed but is not a username.
 function userFromAddress() {
   const params = new URLSearchParams(location.search);
@@ -814,6 +814,7 @@ function userFromAddress() {
     segs = (rest.startsWith(BASE) ? rest.slice(BASE.length) : rest).split('/').filter(Boolean);
   } catch (e) { segs = []; }
   if (segs[0] && /^(www\.)?github\.com$/i.test(segs[0])) segs.shift();
+  if (segs.length > 1) return {};
   const raw = (q || segs[0] || '').replace(/^@/, '').trim();
   if (!raw) return {};
   return USER_RE.test(raw) ? { user: raw } : { bad: raw };
@@ -839,6 +840,7 @@ function route() {
     history.replaceState({}, '', BASE);
   } else {
     setStatus('');
+    if (location.pathname !== BASE) history.replaceState({}, '', BASE);
   }
   homeUser.focus();
 }
