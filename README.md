@@ -193,7 +193,7 @@ badge-path/
 │   ├── config.js          # Frontend runtime configuration
 │   ├── badges.json        # Achievement catalogue and tier thresholds
 │   ├── logo-*.png         # Logos for the light and dark themes
-│   ├── favicon-64*.png    # Browser tab icons (dark and light)
+│   ├── favicon-64-*.png  # Browser tab icons (dark and light)
 │   ├── icon-*.png, apple-touch-icon.png, og-preview.png  # App icons and social preview
 │   ├── robots.txt, site.webmanifest  # Crawler rules and web app manifest
 │   ├── .well-known/security.txt  # How to report a security problem

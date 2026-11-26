@@ -7,7 +7,7 @@ const USER_RE = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i;
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
   const f = document.getElementById('favicon');
-  if (f) f.href = t === 'light' ? 'favicon-64-light.png' : 'favicon-64.png';
+  if (f) f.href = t === 'light' ? 'favicon-64-light.png' : 'favicon-64-dark.png';
 }
 (function initTheme() {
   let t = null;

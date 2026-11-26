@@ -12,7 +12,7 @@ const TYPES = {
   '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
   '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.webmanifest': 'application/manifest+json',
 };
-const PUBLIC = new Set(['index.html', 'style.css', 'app.js', 'config.js', 'badges.json', 'logo-mark-light.png', 'logo-mark-dark.png', 'logo-full-dark.png', 'logo-full-light.png', 'favicon-64.png', 'favicon-64-light.png', 'favicon.ico', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'og-preview.png', 'robots.txt', 'site.webmanifest', '.well-known/security.txt']);
+const PUBLIC = new Set(['index.html', 'style.css', 'app.js', 'config.js', 'badges.json', 'logo-mark-light.png', 'logo-mark-dark.png', 'logo-full-dark.png', 'logo-full-light.png', 'favicon-64-dark.png', 'favicon-64-light.png', 'favicon.ico', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'og-preview.png', 'robots.txt', 'site.webmanifest', '.well-known/security.txt']);
 
 http.createServer((req, res) => {
   let pathname;
