@@ -1,0 +1,26 @@
+# Badgepath
+
+> Badgepath is a free, open-source web app that shows which GitHub achievements a public profile has earned and estimates how close the next tier is. It needs no sign-in, sets no cookies and uses only public GitHub data. It is an independent project and is not affiliated with GitHub.
+
+## Use it
+
+- [Home](https://badge-path.vercel.app/): enter a GitHub username or profile address
+- Profile pages live at `https://badge-path.vercel.app/<github-username>`
+
+## What it shows
+
+- Achievements a profile has earned, with the tier (Default, Bronze, Silver, Gold) that GitHub displays
+- Estimated progress toward the next tier where GitHub exposes a usable public count
+- Public profile statistics: repositories, followers, contributions and streaks
+
+## Limits
+
+- Pair Extraordinaire, Quickdraw, Galaxy Brain, Public Sponsor and other achievements without a public count get no numeric estimate
+- Private-repository activity is not visible
+- Only the 100 most recently updated owned repositories are read
+
+## Project
+
+- [Source code (MIT)](https://github.com/raynerdcunha/badge-path)
+- [Security policy and privacy notes](https://github.com/raynerdcunha/badge-path/blob/main/SECURITY.md)
+- [Author: Rayner Dcunha](https://www.raynerdcunha.com)

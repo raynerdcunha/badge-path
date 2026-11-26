@@ -1,0 +1,5 @@
+Contact: https://www.raynerdcunha.com/contact
+Expires: 2027-11-26T00:00:00.000Z
+Policy: https://github.com/raynerdcunha/badge-path/security/policy
+Preferred-Languages: en
+Canonical: https://badge-path.vercel.app/.well-known/security.txt

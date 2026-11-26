@@ -1,10 +1,11 @@
 'use strict';
 // Small in-memory cache: remembers results for a while, shares one in-flight request between
-// callers, and falls back to the last good value if a refresh fails.
+// callers, and falls back to the last good value (up to maxStaleMs old) if a refresh fails.
 
 class Cache {
-  constructor(now = Date.now) {
+  constructor(now = Date.now, maxStaleMs = 6 * 3600e3) {
     this.now = now;
+    this.maxStaleMs = maxStaleMs;
     this.items = new Map(); // key -> { value, at }
     this.pending = new Map(); // key -> Promise
     this.fails = new Map(); // key -> { err, at }: after a failure, don't hammer GitHub again for a minute
@@ -15,9 +16,10 @@ class Cache {
   async get(key, ttlMs, fn) {
     const hit = this.items.get(key);
     if (hit && this.now() - hit.at < ttlMs) return hit.value;
+    const usable = hit && this.now() - hit.at < this.maxStaleMs;
     const bad = this.fails.get(key);
     if (bad && this.now() - bad.at < this.failMs) {
-      if (hit) return hit.value;
+      if (usable) return hit.value;
       throw bad.err;
     }
     if (this.pending.has(key)) return this.pending.get(key);
@@ -31,7 +33,7 @@ class Cache {
       } catch (e) {
         this.fails.set(key, { err: e, at: this.now() });
         this.trim();
-        if (hit) return hit.value; // stale beats broken
+        if (usable) return hit.value;
         throw e;
       } finally {
         this.pending.delete(key);

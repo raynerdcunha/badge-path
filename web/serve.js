@@ -10,8 +10,9 @@ const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.webmanifest': 'application/manifest+json',
 };
-const PUBLIC = new Set(['index.html', 'style.css', 'app.js', 'config.js', 'badges.json', 'logo-mark-light.png', 'logo-mark-dark.png', 'logo-full-dark.png', 'logo-full-light.png', 'favicon-64.png', 'favicon-64-light.png']);
+const PUBLIC = new Set(['index.html', 'style.css', 'app.js', 'config.js', 'badges.json', 'logo-mark-light.png', 'logo-mark-dark.png', 'logo-full-dark.png', 'logo-full-light.png', 'favicon-64.png', 'favicon-64-light.png', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'og-preview.png', 'robots.txt', 'sitemap.xml', 'llms.txt', 'humans.txt', 'site.webmanifest', '.well-known/security.txt']);
 
 http.createServer((req, res) => {
   let pathname;
@@ -35,7 +36,13 @@ http.createServer((req, res) => {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       return res.end('Not found');
     }
-    res.writeHead(200, { 'Content-Type': TYPES[path.extname(name)] || 'application/octet-stream', 'Cache-Control': 'no-store', 'Content-Security-Policy': "default-src 'self'; img-src 'self' data: https://github.githubassets.com https://avatars.githubusercontent.com; connect-src 'self' http://localhost:3001; object-src 'none'; base-uri 'self'; frame-ancestors 'none'" });
+    res.writeHead(200, { 'Content-Type': TYPES[path.extname(name)] || 'application/octet-stream', 'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer',
+      'X-Frame-Options': 'DENY',
+      'Permissions-Policy': 'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Content-Security-Policy': "default-src 'self'; img-src 'self' data: https://github.githubassets.com https://avatars.githubusercontent.com; connect-src 'self' http://localhost:3001; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; frame-ancestors 'none'" });
     res.end(data);
   });
 }).listen(PORT, '127.0.0.1', () => console.log(`Web page on http://localhost:${PORT}`));

@@ -24,3 +24,35 @@ test('event links with dot segments are dropped', () => {
   const { events } = parseAchievementDetail(html);
   assert.ok(events.every((e) => e.url === null));
 });
+
+test('rate limiter never holds more than maxKeys live entries', () => {
+  const { RateLimiter } = require('../src/ratelimit');
+  const t = 0;
+  const rl = new RateLimiter({ max: 5, windowMs: 60000, now: () => t, maxKeys: 100 });
+  for (let i = 0; i < 1000; i++) rl.check('ip' + i);
+  assert.ok(rl.hits.size <= 100);
+  assert.strictEqual(rl.check('ip999').ok, true);
+});
+
+test('stale data is not served after the maximum stale age', async () => {
+  let t = 0;
+  const c = new Cache(() => t, 1000);
+  await c.get('k', 100, async () => 'old');
+  t = 500;
+  assert.strictEqual(await c.get('k', 100, async () => { throw new Error('down'); }), 'old');
+  t = 70e3;
+  await assert.rejects(c.get('k', 100, async () => { throw new Error('down'); }));
+});
+
+test('every file the web server allows exists, and vercel.json is valid', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const root = path.join(__dirname, '..', '..');
+  const src = fs.readFileSync(path.join(root, 'web', 'serve.js'), 'utf8');
+  const list = /const PUBLIC = new Set\(\[(.*?)\]\);/s.exec(src)[1].match(/'([^']+)'/g).map((s) => s.slice(1, -1));
+  assert.ok(list.length > 10);
+  for (const f of list) assert.ok(fs.existsSync(path.join(root, 'web', f)), f);
+  const v = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
+  const csp = v.headers[0].headers.find((h) => h.key === 'Content-Security-Policy').value;
+  assert.ok(csp.includes("default-src 'self'") && csp.includes("frame-ancestors 'none'"));
+});

@@ -31,7 +31,7 @@ function createServer(options = {}) {
     process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
     .toString().split(',').map((s) => s.trim()).filter(Boolean);
   const limiter = options.limiter ||
-    new RateLimiter({ max: Number(process.env.RATE_LIMIT || 60), windowMs: 60000 });
+    new RateLimiter({ max: Number(process.env.RATE_LIMIT) || 60, windowMs: 60000 });
   const doLookup = options.lookup || lookup;
 
   return http.createServer(async (req, res) => {
@@ -77,9 +77,9 @@ function createServer(options = {}) {
     try {
       return send(200, await doLookup(user));
     } catch (e) {
-      const status = e && e.status ? e.status : 500;
-      if (!e.status) console.error('lookup failed:', e);
-      return send(status, { error: e.status ? e.message : 'Something went wrong.' });
+      const status = e && e.status;
+      if (!status) console.error('lookup failed:', e && e.message);
+      return send(status || 500, { error: status ? e.message : 'Something went wrong.' });
     }
   });
 }

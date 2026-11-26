@@ -1,14 +1,33 @@
 {
-  "name": "github-badge-tracker",
+  "name": "badgepath",
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
-  "description": "See a GitHub profile's achievements and progress toward the next tier.",
+  "description": "See which GitHub achievements a public profile has earned and how close the next tier is.",
+  "author": "Rayner Dcunha (https://www.raynerdcunha.com)",
+  "homepage": "https://badge-path.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/raynerdcunha/badge-path.git"
+  },
+  "bugs": {
+    "url": "https://github.com/raynerdcunha/badge-path/issues"
+  },
+  "keywords": [
+    "github",
+    "achievements",
+    "badges",
+    "progress",
+    "profile",
+    "no-dependencies"
+  ],
   "scripts": {
     "start": "node run-all.js",
     "server": "node server/server.js",
     "web": "node web/serve.js",
-    "test": "node --test \"server/test/*.test.js\""
+    "test": "node --test server/test/fixes.test.js server/test/github.test.js server/test/server.test.js"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=20"
+  }
 }

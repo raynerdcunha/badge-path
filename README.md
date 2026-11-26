@@ -1,5 +1,7 @@
 # 🏅 Badgepath
 
+[![Live site](https://img.shields.io/badge/live-badge--path.vercel.app-7c5cff)](https://badge-path.vercel.app) [![CI](https://github.com/raynerdcunha/badge-path/actions/workflows/ci.yml/badge.svg)](https://github.com/raynerdcunha/badge-path/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE.md)
+
 **Track your GitHub achievements. Discover your progress. Reach the next tier.** 🚀
 
 Badgepath is a lightweight GitHub achievement tracker. Enter a GitHub username or profile URL to explore earned achievements, estimated progress, profile statistics, and the public activity behind selected badges.
@@ -28,7 +30,7 @@ The landing page lets you search by GitHub username. A profile page presents the
 
 ### 📋 Requirements
 
-- [Node.js](https://nodejs.org/) 18 or newer
+- [Node.js](https://nodejs.org/) 20 or newer
 - Internet access to retrieve public GitHub data
 
 There are no third-party npm dependencies.
@@ -123,6 +125,19 @@ Example:
 
 The username must be a valid GitHub username.
 
+| Status | Meaning |
+|:---:|---|
+| `200` | Success |
+| `400` | The username is not a valid GitHub username |
+| `403` | Local server only: the browser origin is not allowed |
+| `404` | GitHub user not found |
+| `405` | Only `GET` is accepted |
+| `429` | Too many requests. The `Retry-After` header says how many seconds to wait |
+| `500` | Something unexpected went wrong. The response never contains details |
+| `502` | GitHub returned an error or was unreachable |
+
+Responses on Vercel are cached at the edge for 30 seconds. `/api/` is closed to search engines.
+
 ### `GET /api/health`
 
 Returns a simple health response:
@@ -149,6 +164,8 @@ Achievement artwork is loaded from GitHub's asset CDN, so an internet connection
 - **Galaxy Brain**, **Public Sponsor**, and other achievements without a public count do not receive a numeric progress estimate.
 - A profile with hidden achievements may appear to have none.
 - Public profile data does not include activity from private repositories.
+- Only the 100 most recently updated owned repositories are read, so star totals, languages and top repositories for accounts with more than 100 repositories are partial.
+- If GitHub fails for longer than a minute, the last good result can be shown for up to six hours; after that the request returns an error instead of old data.
 - GitHub may take time to update an achievement after its requirements have been met.
 - Progress indicators are estimates, not a guarantee that GitHub will award a badge.
 - GitHub can change its page structure, API behavior, or rate limits. Such changes may affect data retrieval.
@@ -177,12 +194,19 @@ badge-path/
 │   ├── badges.json        # Achievement catalogue and tier thresholds
 │   ├── logo-*.png         # Logos for the light and dark themes
 │   ├── favicon-64*.png    # Browser tab icons (dark and light)
+│   ├── icon-*.png, apple-touch-icon.png, og-preview.png  # App icons and social preview
+│   ├── robots.txt, sitemap.xml, llms.txt, humans.txt, site.webmanifest  # Search and AI discovery
+│   ├── .well-known/security.txt  # How to report a security problem
 │   └── serve.js           # Local static web server
+├── .github/               # CI workflow, issue and pull request templates
 ├── .gitattributes         # Keeps line endings consistent (LF)
+├── .vercelignore          # Repo-only files kept out of the deployment
 ├── run-all.js             # Starts the local API and web servers
 ├── start.bat              # Windows launcher
 ├── package.json
-└── vercel.json            # Vercel deployment configuration
+├── vercel.json            # Vercel deployment configuration and security headers
+├── LICENSE.md, NOTICE.md  # MIT license and what it does not cover
+└── SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md
 ```
 
 ## 🧪 Tests
@@ -193,20 +217,29 @@ Run the test suite from the project root:
 npm test
 ```
 
-`npm test` runs `node --test "server/test/*.test.js"`. Use that exact pattern if you run the tests directly, because pointing `node --test` at the `server/` folder can hang on newer Node versions.
+`npm test` lists the test files one by one. Node's test runner only understands patterns like `server/test/*.test.js` from Node 21 onwards, so a pattern would fail on Node 20, and pointing `node --test` at the `server/` folder can hang on newer Node versions. When you add a test file, add it to the `test` script in `package.json`. The same tests run on every push in GitHub Actions on Node 20 and 22.
 
 The tests cover GitHub page parsing, contribution streak calculations, caching, rate limiting, request validation, CORS behavior, and API responses.
 
 ## 🔒 Privacy and security
 
-- No GitHub login is requested.
+Full details and the reasons behind each choice are in [SECURITY.md](SECURITY.md). To report a problem privately, use the contact form named there.
+
+- No GitHub login is requested, and there are no cookies or analytics. Only your light or dark theme choice is saved in your browser.
 - The application looks up public GitHub information only.
+- The profile photo and badge pictures load directly from GitHub's image servers, so GitHub can see your IP address for those images. Everything else is served by Badgepath.
+- The hosting provider (Vercel) keeps normal request logs, which include the username in the address.
 - The local API binds to `127.0.0.1`.
 - The local API validates usernames, checks browser origins, and applies a per-address rate limit.
 - The local web server serves an explicit allowlist of frontend files.
-- The local web server sends a Content-Security-Policy header. On Vercel, `vercel.json` adds that policy plus `X-Frame-Options`, `X-Content-Type-Options` and `Referrer-Policy`.
+- Both the local web server and Vercel send a Content-Security-Policy, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` and `Cross-Origin-Opener-Policy`. Vercel also sends `Strict-Transport-Security`.
 - The Vercel API applies a per-address rate limit, and requests to GitHub time out after 10 seconds.
-- Any optional GitHub token belongs in server-side environment variables only.
+- Any optional GitHub token belongs in server-side environment variables only, and is never written to logs.
+- Errors log only their message, and visitors only ever see short generic error text.
+
+## 📄 License and contributing
+
+The code is released under the [MIT License](LICENSE.md). [NOTICE.md](NOTICE.md) explains what the license does not cover (the Badgepath logo and GitHub's artwork). Small fixes are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## 🙌 Credits
 
