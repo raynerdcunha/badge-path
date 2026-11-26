@@ -67,6 +67,6 @@ GitHub recognises the license by comparing the file with the standard MIT text, 
 
 1. `npm test` passes.
 2. The home page and a profile such as `/torvalds` load with no broken images.
-3. `/api/badges?user=bad..name` returns 400, and `/api/health` returns 200.
+3. `/api/badges?user=bad..name` and `/api/badges?user=octocat&x=1` return 400, `/api/health` returns 200, and an unknown path such as `/api/nope` returns a JSON 404.
 4. `/robots.txt`, `/sitemap.xml` and `/.well-known/security.txt` open as plain text.
 5. The page still carries the Content-Security-Policy header and works with it.

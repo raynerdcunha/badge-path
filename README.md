@@ -1,7 +1,5 @@
 # 🏅 Badgepath
 
-[![Live site](https://img.shields.io/badge/live-badge--path.vercel.app-7c5cff)](https://badge-path.vercel.app) [![CI](https://github.com/raynerdcunha/badge-path/actions/workflows/ci.yml/badge.svg)](https://github.com/raynerdcunha/badge-path/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE.md)
-
 **Track your GitHub achievements. Discover your progress. Reach the next tier.** 🚀
 
 Badgepath is a lightweight GitHub achievement tracker. Enter a GitHub username or profile URL to explore earned achievements, estimated progress, profile statistics, and the public activity behind selected badges.
@@ -128,9 +126,9 @@ The username must be a valid GitHub username.
 | Status | Meaning |
 |:---:|---|
 | `200` | Success |
-| `400` | The username is not a valid GitHub username |
+| `400` | The username is not valid, or an unknown query parameter was sent (only `user` is accepted) |
 | `403` | Local server only: the browser origin is not allowed |
-| `404` | GitHub user not found |
+| `404` | GitHub user not found, or an unknown `/api/` path |
 | `405` | Only `GET` is accepted |
 | `429` | Too many requests. The `Retry-After` header says how many seconds to wait |
 | `500` | Something unexpected went wrong. The response never contains details |
@@ -177,7 +175,8 @@ Achievement artwork is loaded from GitHub's asset CDN, so an internet connection
 badge-path/
 ├── api/
 │   ├── badges.js          # Vercel serverless badge lookup endpoint
-│   └── health.js          # Vercel health endpoint
+│   ├── health.js          # Vercel health endpoint
+│   └── not-found.js       # JSON 404 for unknown /api/ paths
 ├── server/
 │   ├── server.js          # Local HTTP API server
 │   ├── .env.example       # Optional local configuration example
@@ -190,6 +189,8 @@ badge-path/
 │   ├── index.html         # Frontend page
 │   ├── app.js             # Search, rendering, and progress logic
 │   ├── style.css          # Interface styling
+│   ├── 404.html, 404.css  # Not-found page
+│   ├── favicon.ico        # Fallback icon for crawlers and older browsers
 │   ├── config.js          # Frontend runtime configuration
 │   ├── badges.json        # Achievement catalogue and tier thresholds
 │   ├── logo-*.png         # Logos for the light and dark themes

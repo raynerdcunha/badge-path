@@ -89,6 +89,18 @@
   ],
   "rewrites": [
     {
+      "source": "/api/((?!(?:badges|health)$).+)",
+      "destination": "/api/not-found"
+    },
+    {
+      "source": "/api",
+      "destination": "/api/not-found"
+    },
+    {
+      "source": "/api/",
+      "destination": "/api/not-found"
+    },
+    {
       "source": "/((?!api/|.*\\..*).*)",
       "destination": "/index.html"
     }

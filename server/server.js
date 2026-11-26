@@ -71,6 +71,9 @@ function createServer(options = {}) {
     const rl = limiter.check(req.socket.remoteAddress || 'unknown');
     if (!rl.ok) return send(429, { error: 'Too many requests. Try again shortly.' }, { 'Retry-After': String(rl.retryAfterSec) });
 
+    for (const k of url.searchParams.keys()) {
+      if (k !== 'user') return send(400, { error: 'Unknown query parameter.' });
+    }
     const user = (url.searchParams.get('user') || '').trim();
     if (!USERNAME.test(user)) return send(400, { error: 'Invalid GitHub username.' });
 

@@ -23,6 +23,7 @@ module.exports = async (req, res) => {
     res.setHeader('Retry-After', String(rl.retryAfterSec));
     return send(429, { error: 'Too many requests. Try again shortly.' });
   }
+  if (Object.keys(req.query || {}).some((k) => k !== 'user')) return send(400, { error: 'Unknown query parameter.' });
   const user = String((req.query && req.query.user) || '').trim();
   if (!USERNAME.test(user)) return send(400, { error: 'Invalid GitHub username.' });
   try {

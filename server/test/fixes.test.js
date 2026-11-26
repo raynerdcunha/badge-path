@@ -56,3 +56,24 @@ test('every file the web server allows exists, and vercel.json is valid', () => 
   const csp = v.headers[0].headers.find((h) => h.key === 'Content-Security-Policy').value;
   assert.ok(csp.includes("default-src 'self'") && csp.includes("frame-ancestors 'none'"));
 });
+
+test('unknown query parameters are rejected, and an unknown path is a JSON 404', async () => {
+  const { createServer } = require('../server');
+  const { RateLimiter } = require('../src/ratelimit');
+  const s = createServer({
+    allowedOrigins: 'http://localhost:5173',
+    lookup: async (user) => ({ user }),
+    limiter: new RateLimiter({ max: 50, windowMs: 60000 }),
+  });
+  await new Promise((resolve) => s.listen(0, '127.0.0.1', resolve));
+  try {
+    const base = `http://127.0.0.1:${s.address().port}`;
+    assert.strictEqual((await fetch(base + '/api/badges?user=octocat&x=1')).status, 400);
+    assert.strictEqual((await fetch(base + '/api/badges?user=octocat')).status, 200);
+    const r = await fetch(base + '/api/nope');
+    assert.strictEqual(r.status, 404);
+    assert.ok((r.headers.get('content-type') || '').includes('application/json'));
+  } finally {
+    s.close();
+  }
+});
