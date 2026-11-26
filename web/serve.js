@@ -12,7 +12,7 @@ const TYPES = {
   '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
   '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.webmanifest': 'application/manifest+json',
 };
-const PUBLIC = new Set(['index.html', 'style.css', 'app.js', 'config.js', 'badges.json', 'logo-mark-light.png', 'logo-mark-dark.png', 'logo-full-dark.png', 'logo-full-light.png', 'favicon-64.png', 'favicon-64-light.png', 'favicon.ico', '404.css', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'og-preview.png', 'robots.txt', 'site.webmanifest', '.well-known/security.txt']);
+const PUBLIC = new Set(['index.html', 'style.css', 'app.js', 'config.js', 'badges.json', 'logo-mark-light.png', 'logo-mark-dark.png', 'logo-full-dark.png', 'logo-full-light.png', 'favicon-64.png', 'favicon-64-light.png', 'favicon.ico', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'og-preview.png', 'robots.txt', 'site.webmanifest', '.well-known/security.txt']);
 
 http.createServer((req, res) => {
   let pathname;
@@ -25,13 +25,7 @@ http.createServer((req, res) => {
   let name = pathname === '/' ? 'index.html' : pathname.replace(/^\/+|\/+$/g, '');
   // /<github username> is the same page; the page reads the name from the address.
   // Anything that is not a file (no extension) is the page; it reads the username from the address.
-  if (!PUBLIC.has(name) && !TYPES[path.extname(name).toLowerCase()]) name = 'index.html';
-  if (!PUBLIC.has(name)) {
-    return fs.readFile(path.join(ROOT, '404.html'), (e, d) => {
-      res.writeHead(404, { 'Content-Type': e ? 'text/plain' : 'text/html; charset=utf-8' });
-      res.end(e ? 'Not found' : d);
-    });
-  }
+  if (!PUBLIC.has(name)) name = 'index.html';
   fs.readFile(path.join(ROOT, name), (err, data) => {
     if (err) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });

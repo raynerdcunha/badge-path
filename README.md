@@ -17,6 +17,7 @@ Badgepath is a lightweight GitHub achievement tracker. Enter a GitHub username o
 - **Repository insights** — highlights top repositories and language distribution.
 - **Profile highlights** — displays supported GitHub profile highlights separately from achievements.
 - **Live refresh** — periodically refreshes the profile data, with a pause control.
+- **Forgiving addresses** — `/username` opens that profile, and any other address that is not a real page or a valid username returns to the home page.
 - **Light and dark themes** — switch with the theme button; your choice is remembered in the browser.
 - **Responsive interface** — works on desktop and mobile, with a print-friendly layout.
 
@@ -175,8 +176,7 @@ Achievement artwork is loaded from GitHub's asset CDN, so an internet connection
 badge-path/
 ├── api/
 │   ├── badges.js          # Vercel serverless badge lookup endpoint
-│   ├── health.js          # Vercel health endpoint
-│   └── not-found.js       # JSON 404 for unknown /api/ paths
+│   └── health.js          # Vercel health endpoint
 ├── server/
 │   ├── server.js          # Local HTTP API server
 │   ├── .env.example       # Optional local configuration example
@@ -189,7 +189,6 @@ badge-path/
 │   ├── index.html         # Frontend page
 │   ├── app.js             # Search, rendering, and progress logic
 │   ├── style.css          # Interface styling
-│   ├── 404.html, 404.css  # Not-found page
 │   ├── favicon.ico        # Fallback icon for crawlers and older browsers
 │   ├── config.js          # Frontend runtime configuration
 │   ├── badges.json        # Achievement catalogue and tier thresholds
