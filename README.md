@@ -196,7 +196,7 @@ badge-path/
 │   ├── logo-*.png         # Logos for the light and dark themes
 │   ├── favicon-64*.png    # Browser tab icons (dark and light)
 │   ├── icon-*.png, apple-touch-icon.png, og-preview.png  # App icons and social preview
-│   ├── robots.txt, sitemap.xml, llms.txt, humans.txt, site.webmanifest  # Search and AI discovery
+│   ├── robots.txt, site.webmanifest  # Crawler rules and web app manifest
 │   ├── .well-known/security.txt  # How to report a security problem
 │   └── serve.js           # Local static web server
 ├── .github/               # CI workflow, issue and pull request templates

@@ -40,8 +40,8 @@ Some achievements cannot be counted from public data. The README lists them. The
 
 ### Search and AI discovery
 
-**Why `robots.txt`, `sitemap.xml`, `llms.txt` and structured data?**
-They tell search engines and AI tools what the site is. The home page names its preferred address (canonical) and carries a short description and structured data. `/api/` is closed to crawlers because it only returns data. Keep the description near 155 characters, because search engines cut it off.
+**Why `robots.txt` and structured data?**
+They tell search engines what the site is. The home page names its preferred address (canonical) and carries a short description and structured data. `/api/` is closed to crawlers because it only returns data. Keep the description near 155 characters, because search engines cut it off.
 
 ### Accessibility
 
@@ -56,17 +56,10 @@ GitHub recognises the license by comparing the file with the standard MIT text, 
 **Why do the repo-only files stay out of the deployed site?**
 `.vercelignore` lists the tests, the community files and `.github/` so they are not uploaded with the deployment.
 
-### How problems were tackled
-
-- **Check the live site, not just the local copy.** Headers and redirects only show up after deployment, so each change was re-tested on the real site.
-- **Verify a claim before acting on it.** Several automated reviews contained wrong claims. Each point was checked against the code first, and the false ones were dropped.
-- **Check the repo after every push.** Read it back to make sure the files landed.
-- **Copy changed files over; never replace the whole folder.** Replacing a folder with a zip deletes everything the zip leaves out.
-
 ### Quick re-check after any change
 
 1. `npm test` passes.
 2. The home page and a profile such as `/torvalds` load with no broken images.
 3. `/api/badges?user=bad..name` and `/api/badges?user=octocat&x=1` return 400, `/api/health` returns 200, and an unknown path such as `/api/nope` returns a JSON 404.
-4. `/robots.txt`, `/sitemap.xml` and `/.well-known/security.txt` open as plain text.
+4. `/robots.txt` and `/.well-known/security.txt` open as plain text.
 5. The page still carries the Content-Security-Policy header and works with it.
