@@ -123,10 +123,12 @@ Example:
 
 The username must be a valid GitHub username.
 
+Add `&api=skip` to leave GitHub's API out of the lookup. The response then has `apiSkipped: true`, and profile, repository and pull-request values are empty so that a browser can fill them in. Any other value for `api` is rejected with a `400`.
+
 | Status | Meaning |
 |:---:|---|
 | `200` | Success |
-| `400` | The username is not valid, or an unknown query parameter was sent (only `user` is accepted) |
+| `400` | The username is not valid, or an unknown query parameter was sent (only `user` and `api=skip` are accepted) |
 | `403` | Local server only: the browser origin is not allowed |
 | `404` | GitHub user not found, or an unknown `/api/` path |
 | `405` | Only `GET` is accepted |
@@ -147,9 +149,9 @@ Returns a simple health response:
 ## 🔍 How it works
 
 1. The browser accepts a username, `@username`, or GitHub profile URL.
-2. The frontend requests `/api/badges?user=<username>`.
-3. The API reads the public GitHub profile to identify achievements and profile highlights.
-4. It retrieves public profile, repository, pull-request, and contribution information from GitHub.
+2. The frontend requests `/api/badges?user=<username>&api=skip`. The server reads the public GitHub profile page to identify achievements and profile highlights, plus the contribution graph, and does not use GitHub's API.
+3. At the same time, the visitor's own browser asks GitHub's API for the profile, the repositories (one request per 100) and two pull-request counts. A small account costs 4 requests and a 1,100-repository account about 15, out of the visitor's 60 per hour.
+4. If GitHub says the visitor's limit is reached, the frontend asks the server for the full lookup instead, up to 5 times per hour per browser. After that it shows a countdown and loads the missing numbers when it ends.
 5. The frontend compares available counts with the thresholds in `web/badges.json`.
 6. The dashboard displays estimated progress alongside the achievement status GitHub actually shows.
 
@@ -166,6 +168,8 @@ Achievement artwork is loaded from GitHub's asset CDN, so an internet connection
 - If GitHub fails for longer than a minute, the last good result can be shown for up to six hours; after that the request returns an error instead of old data.
 - GitHub may take time to update an achievement after its requirements have been met.
 - Progress indicators are estimates, not a guarantee that GitHub will award a badge.
+- When the visitor's browser reads GitHub's API, the dates on pull-request events are left out, because they need an extra request that only the server makes.
+- The count of 5 free server lookups is kept in the browser, so it can be reset by the visitor. It only affects how quickly the server's shared GitHub limit is used.
 - GitHub can change its page structure, API behavior, or rate limits. Such changes may affect data retrieval.
 - Retired achievements are identified in the catalogue. Achievements not included in `web/badges.json` are not displayed.
 
@@ -223,9 +227,9 @@ The tests cover GitHub page parsing, contribution streak calculations, caching, 
 
 Full details and the reasons behind each choice are in [SECURITY.md](SECURITY.md). To report a problem privately, use the contact form named there.
 
-- No GitHub login is requested, and there are no cookies or analytics. Only your light or dark theme choice is saved in your browser.
+- No GitHub login is requested, and there are no cookies or analytics. Your browser saves your light or dark theme choice, and, for one hour, a short list of the usernames you looked up through the server (used only to count your 5 free server lookups).
 - The application looks up public GitHub information only.
-- The profile photo and badge pictures load directly from GitHub's image servers, so GitHub can see your IP address for those images. Everything else is served by Badgepath.
+- The profile photo and badge pictures load directly from GitHub's image servers, so GitHub can see your IP address for those images. Your browser also asks GitHub's API directly for the profile, repository and pull-request counts, so GitHub sees your IP address and the username you looked up for those requests too. `Referrer-Policy: no-referrer` keeps the Badgepath page address out of them. The badges, contributions and streak are read by Badgepath's server from public GitHub pages.
 - The hosting provider (Vercel) keeps normal request logs, which include the username in the address.
 - The local API binds to `127.0.0.1`.
 - The local API validates usernames, and checks browser origins.

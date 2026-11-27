@@ -30,7 +30,7 @@ Nothing needs installing, nothing needs updating, and there is no package that c
 GitHub has no public API for achievements. The profile page and the achievement pages are the only public source, so `server/src/github.js` reads them and checks the shape of what it finds. If GitHub changes a page, the parser returns nothing instead of wrong numbers. Parser tests live in `server/test/github.test.js`.
 
 **Why do the local server and the Vercel function share one lookup?**
-`server/server.js` and `api/badges.js` both call `lookup()` in `server/src/github.js`, so the numbers are identical. Both also use the same username check, so keep it in step if you change one.
+`server/server.js` and `api/badges.js` both call `lookup()` in `server/src/github.js`, so the numbers are identical. Both also use the same username check, so keep it in step if you change one. The browser repeats the GitHub API part of that lookup in `loadApiParts()` in `web/app.js`, so a change to how stars, languages or top repositories are counted in `gather()` has to be made in both places.
 
 **Why does the cache keep old results?**
 If GitHub is down, a recent result is more useful than an error. It is capped at six hours (`maxStaleMs` in `server/src/cache.js`). After a failure the server also waits a minute before asking GitHub again, so a broken request cannot hammer GitHub.
