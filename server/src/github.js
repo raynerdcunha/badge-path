@@ -6,7 +6,47 @@ const { Cache } = require('./cache');
 
 const UA = 'github-badge-tracker (local project)';
 // Every outbound request gets a deadline so one stuck GitHub call cannot hang all callers sharing it.
-const gfetch = (url, opts) => fetch(url, Object.assign({ signal: AbortSignal.timeout(10000) }, opts));
+const blocked = new Map();
+
+function limitKey(url) {
+  const u = new URL(url);
+  return u.host + (u.pathname.startsWith('/search') ? ':search' : ':core');
+}
+
+function waitSeconds(r) {
+  const after = Number(r.headers.get('retry-after'));
+  if (after > 0) return Math.min(Math.ceil(after), 3600);
+  const reset = Number(r.headers.get('x-ratelimit-reset'));
+  if (reset > 0) return Math.min(Math.max(reset - Math.floor(Date.now() / 1000), 1), 3600);
+  return 60;
+}
+
+function isLimited(r) {
+  if (r.status === 429) return true;
+  return r.status === 403 && (r.headers.get('x-ratelimit-remaining') === '0' || r.headers.has('retry-after'));
+}
+
+function limitError(seconds) {
+  const wait = seconds < 60 ? seconds + ' seconds' : Math.ceil(seconds / 60) + ' minutes';
+  return new HttpError(429, 'GitHub is rate limiting. Try again in ' + wait + '.', seconds);
+}
+
+async function gfetch(url, opts) {
+  const key = limitKey(url);
+  const until = blocked.get(key) || 0;
+  if (Date.now() < until) throw limitError(Math.ceil((until - Date.now()) / 1000));
+  const r = await fetch(url, Object.assign({ signal: AbortSignal.timeout(10000) }, opts));
+  if (isLimited(r)) {
+    const seconds = waitSeconds(r);
+    blocked.set(key, Date.now() + seconds * 1000);
+    throw limitError(seconds);
+  }
+  return r;
+}
+
+function resetLimits() {
+  blocked.clear();
+}
 // Reject paths with "." / ".." segments, which URL cleanup would turn into a different address.
 const NO_DOTS = (p) => !p.split('/').some((s) => /^\.+$/.test(s));
 
@@ -14,9 +54,10 @@ const NO_DOTS = (p) => !p.split('/').some((s) => /^\.+$/.test(s));
 const SRC = /^https:\/\/github\.githubassets\.com\/assets\/([a-z0-9-]+?)-(default|bronze|silver|gold)(?:--([a-z-]+?))?-([0-9a-f]{12})\.png/;
 
 class HttpError extends Error {
-  constructor(status, message) {
+  constructor(status, message, retryAfter) {
     super(message);
     this.status = status;
+    if (retryAfter) this.retryAfter = retryAfter;
   }
 }
 
@@ -163,7 +204,7 @@ async function gather(user) {
   const key = (k) => k + ':' + user.toLowerCase();
   const [profile, repos, merged, yolo, contrib] = await Promise.allSettled([
     cache.get(key('profile'), TTL.light, () => getJson(`https://api.github.com/users/${user}`)),
-    cache.get(key('repos'), TTL.light, () => getJson(`https://api.github.com/users/${user}/repos?per_page=100&type=owner&sort=updated`)),
+    cache.get(key('repos'), TTL.light, () => getJson(`https://api.github.com/search/repositories?q=user:${user}+fork:false&sort=stars&order=desc&per_page=100`)),
     cache.get(key('merged'), TTL.search, () => countSearch(`author:${user}+type:pr+is:merged`)),
     cache.get(key('yolo'), TTL.search, () => countSearch(`author:${user}+type:pr+is:merged+review:none`)),
     cache.get(key('contrib'), TTL.contributions, () => fetchContributions(user)),
@@ -183,11 +224,12 @@ async function gather(user) {
   }
 
   const rs = val(repos);
-  const own = Array.isArray(rs) ? rs.filter((r) => !r.fork) : null;
+  const own = rs && Array.isArray(rs.items) ? rs.items : null;
   out.stats.mergedPRs = val(merged);
   out.stats.yoloPRs = val(yolo);
   out.stats.maxRepoStars = own ? own.reduce((m, r) => Math.max(m, r.stargazers_count || 0), 0) : null;
   out.stats.totalStars = own ? own.reduce((s, r) => s + (r.stargazers_count || 0), 0) : null;
+  out.stats.totalStarsPartial = own ? (rs.total_count || 0) > own.length : false;
 
   if (own) {
     const langs = new Map();
@@ -223,10 +265,10 @@ async function fetchProfilePage(user) {
   try {
     page = await gfetch(`https://github.com/${user}`, { headers: { 'User-Agent': UA, Accept: 'text/html' } });
   } catch (e) {
+    if (e && e.status) throw e;
     throw new HttpError(502, 'Could not reach GitHub.');
   }
   if (page.status === 404) throw new HttpError(404, 'User not found.');
-  if (page.status === 429) throw new HttpError(429, 'GitHub is rate limiting. Try again later.');
   if (!page.ok) throw new HttpError(502, 'GitHub returned ' + page.status + '.');
   const html = await page.text();
   return { earned: parseAchievements(html), highlights: parseHighlights(html) };
@@ -268,4 +310,4 @@ async function lookup(user) {
   return Object.assign({ user, earned, highlights: page.highlights }, data);
 }
 
-module.exports = { HttpError, parseAchievements, parseAchievementDetail, parseHighlights, parseContributions, streaks, lookup, gather };
+module.exports = { HttpError, resetLimits, parseAchievements, parseAchievementDetail, parseHighlights, parseContributions, streaks, lookup, gather };

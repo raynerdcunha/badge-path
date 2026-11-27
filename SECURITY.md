@@ -26,8 +26,8 @@ The policy in `vercel.json` (and the same policy in `web/serve.js` for local use
 **Why is the username checked so strictly?**
 Both the local server and the Vercel function check the name against GitHub's own naming rules (letters, numbers and single hyphens, up to 39 characters) before anything else happens. A name with a slash, dot, question mark or percent sign is rejected with a 400, so it can never change the address that Badgepath requests from GitHub.
 
-**Why is the rate limiter per server instance, and why does it have a size cap?**
-Each serverless instance keeps its own counter in memory, so it is a speed bump, not a wall across all instances. It holds at most 10,000 addresses and drops the oldest when full, so a flood of different addresses cannot use up memory or make every check slow. Vercel sets the client address itself and does not pass on one supplied by the caller, and the function reads Vercel's own address headers first.
+**Why is there no limit on how many requests one visitor can make?**
+Badgepath does not count visitors. It reacts to GitHub instead: when GitHub answers that its limit is reached (a 429 status, or a 403 with no requests remaining), Badgepath records the wait time GitHub gives and makes no more calls to that part of GitHub until then. In the meantime it serves saved results where it has them, and otherwise answers with 429 and a `Retry-After` header. Repeated lookups of the same name are served from the cache and cost GitHub nothing. The trade-off is that one heavy visitor can use up GitHub's allowance for everyone until the reset, and the host's own usage limits still apply. A `GITHUB_TOKEN` raises GitHub's allowance if that ever becomes a problem.
 
 **Why does every request to GitHub time out after 10 seconds?**
 Without a timeout, a slow GitHub could hold a request open until the platform kills it. Every outbound request goes through one helper in `server/src/github.js` that gives up after 10 seconds.

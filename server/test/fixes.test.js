@@ -25,15 +25,6 @@ test('event links with dot segments are dropped', () => {
   assert.ok(events.every((e) => e.url === null));
 });
 
-test('rate limiter never holds more than maxKeys live entries', () => {
-  const { RateLimiter } = require('../src/ratelimit');
-  const t = 0;
-  const rl = new RateLimiter({ max: 5, windowMs: 60000, now: () => t, maxKeys: 100 });
-  for (let i = 0; i < 1000; i++) rl.check('ip' + i);
-  assert.ok(rl.hits.size <= 100);
-  assert.strictEqual(rl.check('ip999').ok, true);
-});
-
 test('stale data is not served after the maximum stale age', async () => {
   let t = 0;
   const c = new Cache(() => t, 1000);
@@ -59,11 +50,9 @@ test('every file the web server allows exists, and vercel.json is valid', () => 
 
 test('unknown query parameters are rejected, and an unknown path is a JSON 404', async () => {
   const { createServer } = require('../server');
-  const { RateLimiter } = require('../src/ratelimit');
   const s = createServer({
     allowedOrigins: 'http://localhost:5173',
     lookup: async (user) => ({ user }),
-    limiter: new RateLimiter({ max: 50, windowMs: 60000 }),
   });
   await new Promise((resolve) => s.listen(0, '127.0.0.1', resolve));
   try {
@@ -75,5 +64,78 @@ test('unknown query parameters are rejected, and an unknown path is a JSON 404',
     assert.ok((r.headers.get('content-type') || '').includes('application/json'));
   } finally {
     s.close();
+  }
+});
+
+function mockGithub(handler) {
+  const real = global.fetch;
+  const calls = [];
+  global.fetch = async (url) => {
+    calls.push(String(url));
+    return handler(String(url));
+  };
+  return { calls, restore: () => { global.fetch = real; } };
+}
+
+test('stars come from the top repositories by stars and are marked partial when there are more', async () => {
+  const gh = require('../src/github');
+  gh.resetLimits();
+  const m = mockGithub((url) => {
+    if (url.startsWith('https://github.com/octo/')) return new Response('', { status: 404 });
+    if (url === 'https://github.com/octo') return new Response('<html></html>', { status: 200 });
+    if (url.includes('/search/repositories')) {
+      return Response.json({ total_count: 150, items: [{ stargazers_count: 30, language: 'JS' }, { stargazers_count: 10, language: 'Go' }] });
+    }
+    if (url.includes('/search/issues')) return Response.json({ total_count: 3 });
+    return new Response('{}', { status: 404 });
+  });
+  try {
+    const r = await gh.lookup('octo');
+    assert.strictEqual(r.stats.totalStars, 40);
+    assert.strictEqual(r.stats.maxRepoStars, 30);
+    assert.strictEqual(r.stats.totalStarsPartial, true);
+    assert.ok(m.calls.some((u) => u.includes('sort=stars&order=desc&per_page=100')));
+  } finally {
+    m.restore();
+  }
+});
+
+test('when GitHub rate limits the API, calls stop until its reset time and badges still load', async () => {
+  const gh = require('../src/github');
+  gh.resetLimits();
+  const reset = String(Math.floor(Date.now() / 1000) + 120);
+  const m = mockGithub((url) => {
+    if (url === 'https://github.com/aa' || url === 'https://github.com/bb') return new Response('<html></html>', { status: 200 });
+    if (url.startsWith('https://api.github.com/users/')) {
+      return new Response('{}', { status: 403, headers: { 'x-ratelimit-remaining': '0', 'x-ratelimit-reset': reset } });
+    }
+    if (url.includes('/search/')) return Response.json({ total_count: 0, items: [] });
+    return new Response('', { status: 404 });
+  });
+  try {
+    const first = await gh.lookup('aa');
+    assert.deepStrictEqual(first.earned, []);
+    assert.strictEqual(first.profile, null);
+    const apiCalls = () => m.calls.filter((u) => u.startsWith('https://api.github.com/users/')).length;
+    const before = apiCalls();
+    await gh.lookup('bb');
+    assert.strictEqual(apiCalls(), before);
+  } finally {
+    m.restore();
+    gh.resetLimits();
+  }
+});
+
+test('when GitHub rate limits the profile page, the error carries how long to wait', async () => {
+  const gh = require('../src/github');
+  gh.resetLimits();
+  const m = mockGithub(() => new Response('', { status: 429, headers: { 'retry-after': '30' } }));
+  try {
+    await assert.rejects(() => gh.lookup('cc'), (e) => e.status === 429 && e.retryAfter === 30 && /30 seconds/.test(e.message));
+    await assert.rejects(() => gh.lookup('dd'), (e) => e.status === 429 && e.retryAfter >= 1 && e.retryAfter <= 30);
+    assert.strictEqual(m.calls.length, 1);
+  } finally {
+    m.restore();
+    gh.resetLimits();
   }
 });

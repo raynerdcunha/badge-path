@@ -7,7 +7,6 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const { lookup } = require('./src/github');
-const { RateLimiter } = require('./src/ratelimit');
 
 // Read server/.env (KEY=value lines) without any library. Real environment variables win.
 function loadEnv(file) {
@@ -30,8 +29,6 @@ function createServer(options = {}) {
   const allowed = (options.allowedOrigins ||
     process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
     .toString().split(',').map((s) => s.trim()).filter(Boolean);
-  const limiter = options.limiter ||
-    new RateLimiter({ max: Number(process.env.RATE_LIMIT) || 60, windowMs: 60000 });
   const doLookup = options.lookup || lookup;
 
   return http.createServer(async (req, res) => {
@@ -68,9 +65,6 @@ function createServer(options = {}) {
     if (req.method !== 'GET') return send(405, { error: 'Use GET.' });
     if (!originOk) return send(403, { error: 'Origin not allowed.' });
 
-    const rl = limiter.check(req.socket.remoteAddress || 'unknown');
-    if (!rl.ok) return send(429, { error: 'Too many requests. Try again shortly.' }, { 'Retry-After': String(rl.retryAfterSec) });
-
     for (const k of url.searchParams.keys()) {
       if (k !== 'user') return send(400, { error: 'Unknown query parameter.' });
     }
@@ -82,7 +76,7 @@ function createServer(options = {}) {
     } catch (e) {
       const status = e && e.status;
       if (!status) console.error('lookup failed:', e && e.message);
-      return send(status || 500, { error: status ? e.message : 'Something went wrong.' });
+      return send(status || 500, { error: status ? e.message : 'Something went wrong.' }, e && e.retryAfter ? { 'Retry-After': String(e.retryAfter) } : {});
     }
   });
 }

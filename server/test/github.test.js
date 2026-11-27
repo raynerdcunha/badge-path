@@ -3,7 +3,6 @@ const test = require('node:test');
 const assert = require('node:assert');
 const { parseAchievements, parseAchievementDetail, parseHighlights, parseContributions, streaks } = require('../src/github');
 const { Cache } = require('../src/cache');
-const { RateLimiter } = require('../src/ratelimit');
 
 const A = 'https://github.githubassets.com/assets/';
 
@@ -32,19 +31,6 @@ test('streaks counts current and longest runs', () => {
   assert.deepStrictEqual(streaks([d(1), d(1), d(0), d(2), d(3), d(0)]), { current: 2, longest: 2 });
   assert.deepStrictEqual(streaks([d(0), d(4), d(5), d(6)]), { current: 3, longest: 3 });
   assert.deepStrictEqual(streaks([]), { current: 0, longest: 0 });
-});
-
-test('RateLimiter blocks after max and resets after the window', () => {
-  let t = 0;
-  const rl = new RateLimiter({ max: 2, windowMs: 1000, now: () => t });
-  assert.ok(rl.check('a').ok);
-  assert.ok(rl.check('a').ok);
-  const blocked = rl.check('a');
-  assert.ok(!blocked.ok);
-  assert.ok(blocked.retryAfterSec >= 1);
-  assert.ok(rl.check('b').ok);
-  t = 1500;
-  assert.ok(rl.check('a').ok);
 });
 
 // Mirrors the real fragment: cells are listed by weekday row (not date order); counts live in <tool-tip>.

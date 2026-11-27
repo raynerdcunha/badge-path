@@ -82,7 +82,6 @@ To customize the local API, copy `server/.env.example` to `server/.env` and chan
 |---|:---|---|
 | `PORT` | `3001` | Port used by the local API server |
 | `ALLOWED_ORIGINS` | `http://localhost:5173`<br>`http://127.0.0.1:5173` | Browser origins allowed to call the local API, separated by commas |
-| `RATE_LIMIT` | `60` | Maximum API requests per address per minute |
 | `WEB_PORT` | `5173` | Port used by the local web server (set it in your shell; `server/.env` is not read by the web server) |
 
 Environment variables already set by the hosting environment take precedence over values in `server/.env`.
@@ -163,7 +162,7 @@ Achievement artwork is loaded from GitHub's asset CDN, so an internet connection
 - **Galaxy Brain**, **Public Sponsor**, and other achievements without a public count do not receive a numeric progress estimate.
 - A profile with hidden achievements may appear to have none.
 - Public profile data does not include activity from private repositories.
-- Only the 100 most recently updated owned repositories are read, so star totals, languages and top repositories for accounts with more than 100 repositories are partial.
+- Only the 100 most starred owned repositories are read. For accounts with more than 100 repositories the star total is shown with a plus sign as a lower bound, and languages cover those top repositories. The most starred repository is always exact.
 - If GitHub fails for longer than a minute, the last good result can be shown for up to six hours; after that the request returns an error instead of old data.
 - GitHub may take time to update an achievement after its requirements have been met.
 - Progress indicators are estimates, not a guarantee that GitHub will award a badge.
@@ -182,8 +181,7 @@ badge-path/
 │   ├── .env.example       # Optional local configuration example
 │   ├── src/
 │   │   ├── cache.js       # In-memory response cache
-│   │   ├── github.js      # GitHub data retrieval and parsing
-│   │   └── ratelimit.js   # Per-address request limiter
+│   │   └── github.js      # GitHub data retrieval, parsing and rate limit handling
 │   └── test/              # API and utility tests (github, server, fixes)
 ├── web/
 │   ├── index.html         # Frontend page
@@ -219,7 +217,7 @@ npm test
 
 `npm test` lists the test files one by one. Node's test runner only understands patterns like `server/test/*.test.js` from Node 21 onwards, so a pattern would fail on Node 20, and pointing `node --test` at the `server/` folder can hang on newer Node versions. When you add a test file, add it to the `test` script in `package.json`. The same tests run on every push in GitHub Actions on Node 20 and 22.
 
-The tests cover GitHub page parsing, contribution streak calculations, caching, rate limiting, request validation, CORS behavior, and API responses.
+The tests cover GitHub page parsing, contribution streak calculations, caching, GitHub rate limit handling, request validation, CORS behavior, and API responses.
 
 ## 🔒 Privacy and security
 
@@ -230,10 +228,10 @@ Full details and the reasons behind each choice are in [SECURITY.md](SECURITY.md
 - The profile photo and badge pictures load directly from GitHub's image servers, so GitHub can see your IP address for those images. Everything else is served by Badgepath.
 - The hosting provider (Vercel) keeps normal request logs, which include the username in the address.
 - The local API binds to `127.0.0.1`.
-- The local API validates usernames, checks browser origins, and applies a per-address rate limit.
+- The local API validates usernames, and checks browser origins.
 - The local web server serves an explicit allowlist of frontend files.
 - Both the local web server and Vercel send a Content-Security-Policy, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` and `Cross-Origin-Opener-Policy`. Vercel also sends `Strict-Transport-Security`.
-- The Vercel API applies a per-address rate limit, and requests to GitHub time out after 10 seconds.
+- Requests to GitHub time out after 10 seconds. When GitHub says it is rate limiting, Badgepath stops calling that part of GitHub until the time GitHub gives, and shows saved results meanwhile.
 - Any optional GitHub token belongs in server-side environment variables only, and is never written to logs.
 - Errors log only their message, and visitors only ever see short generic error text.
 

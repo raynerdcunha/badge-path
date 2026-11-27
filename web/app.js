@@ -467,7 +467,7 @@ function renderStats(data) {
   [
     [s.mergedPRs, 'Merged pull requests'],
     [s.publicRepos, 'Public repositories'],
-    [s.totalStars, 'Public stars received'],
+    [s.totalStarsPartial && typeof s.totalStars === 'number' ? s.totalStars.toLocaleString() + '+' : s.totalStars, 'Public stars received'],
     [s.yearContributions, 'Contributions, last year'],
     [streak, streakLabel],
   ].forEach(([v, label]) => {

@@ -2,7 +2,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const { createServer } = require('../server');
-const { RateLimiter } = require('../src/ratelimit');
 const { HttpError } = require('../src/github');
 
 function start(opts) {
@@ -17,11 +16,10 @@ const fakeLookup = async (user) => {
   return { user, earned: [], stats: {}, languages: [], topRepos: [], profile: null };
 };
 
-test('api behaves: validation, CORS, not found, rate limit', async () => {
+test('api behaves: validation, CORS, not found', async () => {
   const { s, base } = await start({
     allowedOrigins: 'http://localhost:5173',
     lookup: fakeLookup,
-    limiter: new RateLimiter({ max: 4, windowMs: 60000 }),
   });
   try {
     let r = await fetch(base + '/api/health');
@@ -45,11 +43,6 @@ test('api behaves: validation, CORS, not found, rate limit', async () => {
     r = await fetch(base + '/nope');
     assert.strictEqual(r.status, 404);
 
-    r = await fetch(base + '/api/badges?user=octocat'); // 4th counted request (health, 404s and blocked origins are not counted)
-    assert.strictEqual(r.status, 200);
-    r = await fetch(base + '/api/badges?user=octocat'); // 5th counted request
-    assert.strictEqual(r.status, 429);
-    assert.ok(r.headers.get('retry-after'));
   } finally {
     s.close();
   }
