@@ -162,7 +162,7 @@ Achievement artwork is loaded from GitHub's asset CDN, so an internet connection
 - **Galaxy Brain**, **Public Sponsor**, and other achievements without a public count do not receive a numeric progress estimate.
 - A profile with hidden achievements may appear to have none.
 - Public profile data does not include activity from private repositories.
-- Only the 100 most starred owned repositories are read. For accounts with more than 100 repositories the star total is shown with a plus sign as a lower bound, and languages cover those top repositories. The most starred repository is always exact.
+- Every page of an account's owned repositories is read (up to 2,000 repositories), so star totals, languages and top repositories are exact. If GitHub rate limits part of the read, or the account is larger than that, the star total is shown with a plus sign as a lower bound. A large account costs one GitHub request per 100 repositories, and the result is cached for an hour.
 - If GitHub fails for longer than a minute, the last good result can be shown for up to six hours; after that the request returns an error instead of old data.
 - GitHub may take time to update an achievement after its requirements have been met.
 - Progress indicators are estimates, not a guarantee that GitHub will award a badge.

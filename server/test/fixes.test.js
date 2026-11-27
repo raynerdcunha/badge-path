@@ -77,24 +77,47 @@ function mockGithub(handler) {
   return { calls, restore: () => { global.fetch = real; } };
 }
 
-test('stars come from the top repositories by stars and are marked partial when there are more', async () => {
+function repoPage(from, n, stars) {
+  return Array.from({ length: n }, (_, i) => ({ name: 'r' + (from + i), stargazers_count: stars, language: 'JS', fork: false }));
+}
+
+test('stars add up across every page of repositories', async () => {
   const gh = require('../src/github');
   gh.resetLimits();
   const m = mockGithub((url) => {
-    if (url.startsWith('https://github.com/octo/')) return new Response('', { status: 404 });
     if (url === 'https://github.com/octo') return new Response('<html></html>', { status: 200 });
-    if (url.includes('/search/repositories')) {
-      return Response.json({ total_count: 150, items: [{ stargazers_count: 30, language: 'JS' }, { stargazers_count: 10, language: 'Go' }] });
-    }
+    if (url === 'https://api.github.com/users/octo') return Response.json({ login: 'octo', public_repos: 250 });
+    if (url.includes('/users/octo/repos') && url.endsWith('page=1')) return Response.json(repoPage(0, 100, 2));
+    if (url.includes('/users/octo/repos') && url.endsWith('page=2')) return Response.json(repoPage(100, 100, 2));
+    if (url.includes('/users/octo/repos') && url.endsWith('page=3')) return Response.json(repoPage(200, 50, 2));
     if (url.includes('/search/issues')) return Response.json({ total_count: 3 });
     return new Response('{}', { status: 404 });
   });
   try {
     const r = await gh.lookup('octo');
-    assert.strictEqual(r.stats.totalStars, 40);
-    assert.strictEqual(r.stats.maxRepoStars, 30);
+    assert.strictEqual(r.stats.totalStars, 500);
+    assert.strictEqual(r.stats.totalStarsPartial, false);
+    assert.strictEqual(m.calls.filter((u) => u.includes('/users/octo/repos')).length, 3);
+  } finally {
+    m.restore();
+  }
+});
+
+test('stars are marked partial when a page of repositories cannot be read', async () => {
+  const gh = require('../src/github');
+  gh.resetLimits();
+  const m = mockGithub((url) => {
+    if (url === 'https://github.com/pat') return new Response('<html></html>', { status: 200 });
+    if (url === 'https://api.github.com/users/pat') return Response.json({ login: 'pat', public_repos: 200 });
+    if (url.includes('/users/pat/repos') && url.endsWith('page=1')) return Response.json(repoPage(0, 100, 3));
+    if (url.includes('/users/pat/repos')) return new Response('{}', { status: 500 });
+    if (url.includes('/search/issues')) return Response.json({ total_count: 3 });
+    return new Response('{}', { status: 404 });
+  });
+  try {
+    const r = await gh.lookup('pat');
+    assert.strictEqual(r.stats.totalStars, 300);
     assert.strictEqual(r.stats.totalStarsPartial, true);
-    assert.ok(m.calls.some((u) => u.includes('sort=stars&order=desc&per_page=100')));
   } finally {
     m.restore();
   }

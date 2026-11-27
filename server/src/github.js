@@ -188,7 +188,7 @@ const countSearch = (q) =>
   getJson('https://api.github.com/search/issues?per_page=1&q=' + q).then((j) => j.total_count);
 
 const cache = new Cache();
-const TTL = { page: 5e3, contributions: 15e3, light: 60e3, search: 300e3, detail: 864e5, pr: 2592e6 };
+const TTL = { page: 5e3, contributions: 15e3, light: 60e3, repos: 36e5, search: 300e3, detail: 864e5, pr: 2592e6 };
 
 async function fetchContributions(user) {
   const r = await gfetch(`https://github.com/users/${user}/contributions`, {
@@ -200,11 +200,36 @@ async function fetchContributions(user) {
   return parsed;
 }
 
+const REPO_PAGES = 20;
+
+async function fetchRepos(user, profileKey) {
+  const url = (n) => `https://api.github.com/users/${user}/repos?per_page=100&type=owner&page=${n}`;
+  const first = await getJson(url(1));
+  if (first.length < 100) return { items: first, partial: false };
+  let count = 0;
+  try {
+    const p = await cache.get(profileKey, TTL.light, () => getJson(`https://api.github.com/users/${user}`));
+    count = p.public_repos || 0;
+  } catch (e) {
+    count = 0;
+  }
+  const needed = Math.max(Math.ceil(count / 100), 1);
+  const pages = Math.min(needed, REPO_PAGES);
+  let partial = count === 0 || needed > REPO_PAGES;
+  let items = first;
+  const rest = await Promise.allSettled(Array.from({ length: pages - 1 }, (_, i) => getJson(url(i + 2))));
+  for (const r of rest) {
+    if (r.status === 'fulfilled') items = items.concat(r.value);
+    else partial = true;
+  }
+  return { items, partial };
+}
+
 async function gather(user) {
   const key = (k) => k + ':' + user.toLowerCase();
   const [profile, repos, merged, yolo, contrib] = await Promise.allSettled([
     cache.get(key('profile'), TTL.light, () => getJson(`https://api.github.com/users/${user}`)),
-    cache.get(key('repos'), TTL.light, () => getJson(`https://api.github.com/search/repositories?q=user:${user}+fork:false&sort=stars&order=desc&per_page=100`)),
+    cache.get(key('repos'), TTL.repos, () => fetchRepos(user, key('profile'))),
     cache.get(key('merged'), TTL.search, () => countSearch(`author:${user}+type:pr+is:merged`)),
     cache.get(key('yolo'), TTL.search, () => countSearch(`author:${user}+type:pr+is:merged+review:none`)),
     cache.get(key('contrib'), TTL.contributions, () => fetchContributions(user)),
@@ -224,12 +249,12 @@ async function gather(user) {
   }
 
   const rs = val(repos);
-  const own = rs && Array.isArray(rs.items) ? rs.items : null;
+  const own = rs ? rs.items.filter((r) => !r.fork) : null;
   out.stats.mergedPRs = val(merged);
   out.stats.yoloPRs = val(yolo);
   out.stats.maxRepoStars = own ? own.reduce((m, r) => Math.max(m, r.stargazers_count || 0), 0) : null;
   out.stats.totalStars = own ? own.reduce((s, r) => s + (r.stargazers_count || 0), 0) : null;
-  out.stats.totalStarsPartial = own ? (rs.total_count || 0) > own.length : false;
+  out.stats.totalStarsPartial = own ? rs.partial : false;
 
   if (own) {
     const langs = new Map();
