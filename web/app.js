@@ -441,7 +441,7 @@ function drawNotice() {
   }
   t.textContent = ' Loading now...';
   noticeUntil = 0;
-  lastFetchAt = 0;
+  lastFetchAt = Date.now() - POLL_MS;
 }
 
 function renderNotice(data) {
@@ -975,7 +975,7 @@ async function refresh() {
 
 liveBtn.addEventListener('click', () => {
   paused = !paused;
-  if (!paused) lastFetchAt = 0; // refresh right away on resume
+  if (!paused) lastFetchAt = Date.now() - POLL_MS;
   drawLive();
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) tickLive(); else drawLive(); });
