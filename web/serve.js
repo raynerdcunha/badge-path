@@ -37,7 +37,7 @@ http.createServer((req, res) => {
       'X-Frame-Options': 'DENY',
       'Permissions-Policy': 'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()',
       'Cross-Origin-Opener-Policy': 'same-origin',
-      'Content-Security-Policy': "default-src 'self'; img-src 'self' data: https://github.githubassets.com https://avatars.githubusercontent.com; connect-src 'self' http://localhost:3001; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; frame-ancestors 'none'" });
+      'Content-Security-Policy': "default-src 'self'; img-src 'self' data: https://github.githubassets.com https://avatars.githubusercontent.com; connect-src 'self' http://localhost:3001 https://api.github.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; frame-ancestors 'none'" });
     res.end(data);
   });
 }).listen(PORT, '127.0.0.1', () => console.log(`Web page on http://localhost:${PORT}`));

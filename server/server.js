@@ -66,13 +66,15 @@ function createServer(options = {}) {
     if (!originOk) return send(403, { error: 'Origin not allowed.' });
 
     for (const k of url.searchParams.keys()) {
-      if (k !== 'user') return send(400, { error: 'Unknown query parameter.' });
+      if (k !== 'user' && k !== 'api') return send(400, { error: 'Unknown query parameter.' });
     }
+    const apiParam = url.searchParams.get('api');
+    if (apiParam !== null && apiParam !== 'skip') return send(400, { error: 'Unknown query parameter.' });
     const user = (url.searchParams.get('user') || '').trim();
     if (!USERNAME.test(user)) return send(400, { error: 'Invalid GitHub username.' });
 
     try {
-      return send(200, await doLookup(user));
+      return send(200, await doLookup(user, { skipApi: apiParam === 'skip' }));
     } catch (e) {
       const status = e && e.status;
       if (!status) console.error('lookup failed:', e && e.message);

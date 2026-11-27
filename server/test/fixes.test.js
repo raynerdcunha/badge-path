@@ -59,6 +59,8 @@ test('unknown query parameters are rejected, and an unknown path is a JSON 404',
     const base = `http://127.0.0.1:${s.address().port}`;
     assert.strictEqual((await fetch(base + '/api/badges?user=octocat&x=1')).status, 400);
     assert.strictEqual((await fetch(base + '/api/badges?user=octocat')).status, 200);
+    assert.strictEqual((await fetch(base + '/api/badges?user=octocat&api=skip')).status, 200);
+    assert.strictEqual((await fetch(base + '/api/badges?user=octocat&api=other')).status, 400);
     const r = await fetch(base + '/api/nope');
     assert.strictEqual(r.status, 404);
     assert.ok((r.headers.get('content-type') || '').includes('application/json'));
@@ -97,6 +99,7 @@ test('stars add up across every page of repositories', async () => {
     const r = await gh.lookup('octo');
     assert.strictEqual(r.stats.totalStars, 500);
     assert.strictEqual(r.stats.totalStarsPartial, false);
+    assert.ok(!r.notice || !r.notice.missing.includes('repos'));
     assert.strictEqual(m.calls.filter((u) => u.includes('/users/octo/repos')).length, 3);
   } finally {
     m.restore();
@@ -118,6 +121,7 @@ test('stars are marked partial when a page of repositories cannot be read', asyn
     const r = await gh.lookup('pat');
     assert.strictEqual(r.stats.totalStars, 300);
     assert.strictEqual(r.stats.totalStarsPartial, true);
+    assert.ok(!r.notice || !r.notice.missing.includes('repos'));
   } finally {
     m.restore();
   }
@@ -139,6 +143,9 @@ test('when GitHub rate limits the API, calls stop until its reset time and badge
     const first = await gh.lookup('aa');
     assert.deepStrictEqual(first.earned, []);
     assert.strictEqual(first.profile, null);
+    assert.strictEqual(first.notice.kind, 'rate_limit');
+    assert.ok(first.notice.missing.includes('profile') && first.notice.missing.includes('repos'));
+    assert.ok(first.notice.retryAfter >= 100 && first.notice.retryAfter <= 121);
     const apiCalls = () => m.calls.filter((u) => u.startsWith('https://api.github.com/users/')).length;
     const before = apiCalls();
     await gh.lookup('bb');
@@ -160,5 +167,19 @@ test('when GitHub rate limits the profile page, the error carries how long to wa
   } finally {
     m.restore();
     gh.resetLimits();
+  }
+});
+
+test('api=skip makes no calls to the GitHub API', async () => {
+  const gh = require('../src/github');
+  gh.resetLimits();
+  const m = mockGithub(async () => new Response('<html></html>', { status: 200 }));
+  try {
+    let r = null;
+    try { r = await gh.lookup('skipcheck-user', { skipApi: true }); } catch (e) { r = { apiSkipped: true }; }
+    assert.ok(m.calls.every((u) => !u.includes('api.github.com')));
+    assert.strictEqual(r.apiSkipped, true);
+  } finally {
+    m.restore();
   }
 });

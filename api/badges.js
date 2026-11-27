@@ -14,11 +14,12 @@ module.exports = async (req, res) => {
     res.end(JSON.stringify(body));
   };
   if (req.method !== 'GET') return send(405, { error: 'Use GET.' });
-  if (Object.keys(req.query || {}).some((k) => k !== 'user')) return send(400, { error: 'Unknown query parameter.' });
+  const q = req.query || {};
+  if (Object.keys(q).some((k) => k !== 'user' && k !== 'api') || (q.api !== undefined && q.api !== 'skip')) return send(400, { error: 'Unknown query parameter.' });
   const user = String((req.query && req.query.user) || '').trim();
   if (!USERNAME.test(user)) return send(400, { error: 'Invalid GitHub username.' });
   try {
-    return send(200, await lookup(user), 'public, s-maxage=30, stale-while-revalidate=120');
+    return send(200, await lookup(user, { skipApi: q.api === 'skip' }), 'public, s-maxage=30, stale-while-revalidate=120');
   } catch (e) {
     const status = e && e.status;
     if (e && e.retryAfter) res.setHeader('Retry-After', String(e.retryAfter));

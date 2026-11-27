@@ -28,7 +28,9 @@ function isLimited(r) {
 
 function limitError(seconds) {
   const wait = seconds < 60 ? seconds + ' seconds' : Math.ceil(seconds / 60) + ' minutes';
-  return new HttpError(429, 'GitHub is rate limiting. Try again in ' + wait + '.', seconds);
+  const err = new HttpError(429, 'GitHub is rate limiting. Try again in ' + wait + '.', seconds);
+  err.until = Date.now() + seconds * 1000;
+  return err;
 }
 
 async function gfetch(url, opts) {
@@ -225,18 +227,31 @@ async function fetchRepos(user, profileKey) {
   return { items, partial };
 }
 
-async function gather(user) {
+async function gather(user, skipApi) {
   const key = (k) => k + ':' + user.toLowerCase();
+  const viaApi = (k, ttl, fn) => (skipApi ? Promise.resolve(null) : cache.get(key(k), ttl, fn));
   const [profile, repos, merged, yolo, contrib] = await Promise.allSettled([
-    cache.get(key('profile'), TTL.light, () => getJson(`https://api.github.com/users/${user}`)),
-    cache.get(key('repos'), TTL.repos, () => fetchRepos(user, key('profile'))),
-    cache.get(key('merged'), TTL.search, () => countSearch(`author:${user}+type:pr+is:merged`)),
-    cache.get(key('yolo'), TTL.search, () => countSearch(`author:${user}+type:pr+is:merged+review:none`)),
+    viaApi('profile', TTL.light, () => getJson(`https://api.github.com/users/${user}`)),
+    viaApi('repos', TTL.repos, () => fetchRepos(user, key('profile'))),
+    viaApi('merged', TTL.search, () => countSearch(`author:${user}+type:pr+is:merged`)),
+    viaApi('yolo', TTL.search, () => countSearch(`author:${user}+type:pr+is:merged+review:none`)),
     cache.get(key('contrib'), TTL.contributions, () => fetchContributions(user)),
   ]);
   const val = (r) => (r.status === 'fulfilled' ? r.value : null);
 
-  const out = { profile: null, stats: {}, languages: [], topRepos: [] };
+  const out = { profile: null, stats: {}, languages: [], topRepos: [], notice: null, apiSkipped: !!skipApi };
+
+  const parts = { profile, repos, merged, yolo, contrib };
+  const failed = Object.keys(parts).filter((k) => parts[k].status === 'rejected');
+  if (failed.length) {
+    const limited = failed.map((k) => parts[k].reason).filter((e) => e && e.status === 429);
+    const waits = limited.map((e) => Math.ceil(((e.until || 0) - Date.now()) / 1000)).filter((n) => n > 0);
+    out.notice = {
+      kind: limited.length ? 'rate_limit' : 'unavailable',
+      retryAfter: limited.length ? Math.max(1, ...waits, 1) : null,
+      missing: failed,
+    };
+  }
 
   const p = val(profile);
   if (p) {
@@ -309,11 +324,11 @@ async function fetchAchievementDetail(user, slug) {
 
 // Full lookup for one username: badges from the profile page + counts. Results are cached briefly,
 // so frequent refreshes from the page cost GitHub very few requests.
-async function lookup(user) {
+async function lookup(user, opts = {}) {
   const lu = user.toLowerCase();
   const page = await cache.get('page:' + lu, TTL.page, () => fetchProfilePage(user));
   const [data, details] = await Promise.all([
-    gather(user),
+    gather(user, opts.skipApi),
     // A badge's history only changes when a new tier is earned, so cache it per tier for a day.
     Promise.allSettled(page.earned.map((e) =>
       cache.get(`detail:${lu}:${e.slug}:${e.tier}`, TTL.detail, () => fetchAchievementDetail(user, e.slug)))),
@@ -327,7 +342,7 @@ async function lookup(user) {
   let budget = 8;
   await Promise.allSettled(earned.flatMap((e) => (e.events || []).map(async (ev) => {
     const m = ev.url && ev.url.match(/^https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/pull\/(\d+)$/);
-    if (!m || !NO_DOTS(ev.url) || budget <= 0) return;
+    if (opts.skipApi || !m || !NO_DOTS(ev.url) || budget <= 0) return;
     if (!cache.has('pr:' + ev.url)) budget -= 1;
     const j = await cache.get('pr:' + ev.url, TTL.pr, () => getJson(`https://api.github.com/repos/${m[1]}/${m[2]}/pulls/${m[3]}`));
     if (j && j.merged_at && !Number.isNaN(Date.parse(j.merged_at))) ev.date = new Date(j.merged_at).toISOString();

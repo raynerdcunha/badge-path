@@ -490,3 +490,18 @@ body.home .footer{width:min(1120px,calc(100% - 44px))}
 @media(max-width:620px){.hero-logo{height:110px}}
 
 .brand-logo-img{height:42px;width:auto;display:block}
+
+.notice{display:flex;gap:10px;align-items:center;margin:10px 0 0;padding:8px 14px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.4;color:var(--muted);text-align:left}
+.notice[hidden]{display:none}
+.nicon{flex:none;width:18px;height:18px;border-radius:50%;background:var(--gold);color:var(--bg);display:grid;place-items:center;font-weight:700;font-size:11px}
+.nbody b{font-weight:600;color:var(--text)}
+.ntimer{font-variant-numeric:tabular-nums}
+.skbar{display:inline-block;height:12px;border-radius:6px;background:var(--line);vertical-align:middle}
+.skbar.name{width:130px;margin-right:6px}
+.skbar.bio{width:260px;max-width:100%}
+.profile.unknown .avatar{background:var(--surface2);border-style:dashed}
+.stat.miss{background:var(--surface2);border:1px dashed var(--line2);box-shadow:none}
+.stat.miss b{color:var(--dim)}
+.panel.miss{background:var(--surface2);border:1px dashed var(--line2)}
+.skline{height:9px;border-radius:5px;background:var(--line);margin:0 0 9px}
+.miss-note{margin:6px 0 0;font-size:13px;color:var(--muted);line-height:1.5}

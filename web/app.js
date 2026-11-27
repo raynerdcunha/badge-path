@@ -26,6 +26,8 @@ const homeForm = $('homeForm'), homeUser = $('homeUser'), homeGo = $('homeGo'), 
 const topForm = $('topForm'), topUser = $('topUser'), topGo = $('topGo'), topStatus = $('topStatus');
 const homeEl = $('home'), resultsEl = $('results');
 const moreWrap = $('moreWrap');
+const noticeEl = $('notice');
+let noticeUntil = 0;
 const profileEl = $('profile'), statsEl = $('stats'), grid = $('grid'), extrasEl = $('extras'), copyWrap = $('copyWrap');
 const hlWrap = $('hlWrap'), hlEl = $('highlights');
 
@@ -413,14 +415,80 @@ function buildRow(badge, entry, stats) {
   return card;
 }
 
+function waitText(secs) {
+  return Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
+}
+
+function missingParts(data) {
+  const s = data.stats || {};
+  const n = data.notice;
+  const gone = [];
+  if (!data.profile) gone.push('profile');
+  if (n && n.missing.includes('repos') && !(data.languages || []).length && !(data.topRepos || []).length) gone.push('repos');
+  ['mergedPRs', 'publicRepos', 'totalStars', 'yearContributions', 'currentStreak'].forEach((k) => {
+    if (s[k] === null || s[k] === undefined) gone.push(k);
+  });
+  return gone;
+}
+
+function drawNotice() {
+  const t = document.getElementById('noticeTimer');
+  if (!t || !noticeUntil) return;
+  const left = Math.max(0, Math.ceil((noticeUntil - Date.now()) / 1000));
+  if (left > 0) {
+    t.textContent = ' Loads again in ' + waitText(left) + '.';
+    return;
+  }
+  t.textContent = ' Loading now...';
+  noticeUntil = 0;
+  lastFetchAt = 0;
+}
+
+function renderNotice(data) {
+  noticeEl.textContent = '';
+  const n = data.notice;
+  if (!n || !missingParts(data).length) {
+    noticeUntil = 0;
+    noticeEl.hidden = true;
+    return;
+  }
+  noticeEl.hidden = false;
+  const body = el('div', 'nbody');
+  body.appendChild(el('b', null, n.kind === 'rate_limit'
+    ? (n.source === 'browser' ? 'GitHub request limit reached for your connection.' : 'GitHub request limit reached.')
+    : 'GitHub did not answer for some details.'));
+  const timer = el('span', 'ntimer');
+  timer.id = 'noticeTimer';
+  body.appendChild(timer);
+  noticeEl.appendChild(el('span', 'nicon', '!'));
+  noticeEl.appendChild(body);
+  noticeUntil = Date.now() + (n.retryAfter ? n.retryAfter * 1000 : 30000);
+  drawNotice();
+}
+
+function missingPanel(title, notice) {
+  const panel = el('div', 'panel miss');
+  panel.appendChild(el('h3', null, title));
+  [80, 55].forEach((w) => {
+    const line = el('div', 'skline');
+    line.style.width = w + '%';
+    panel.appendChild(line);
+  });
+  panel.appendChild(el('p', 'miss-note', notice.kind === 'rate_limit'
+    ? 'Could not load repositories because GitHub is rate limiting.'
+    : 'Could not load repositories right now.'));
+  return panel;
+}
+
 function renderProfile(data, earnedCount, total, tiersGot, tiersAll) {
   profileEl.textContent = '';
   const p = data.profile;
-  if (!p) return;
-  const box = el('div', 'profile');
+  const login = p ? p.login : data.user;
+  if (!login) return;
+  const box = el('div', p ? 'profile' : 'profile unknown');
 
-  const av = el('div', 'avatar', (p.name || p.login || '?')[0].toUpperCase());
-  if (safeAvatar(p.avatar)) {
+  const av = el('div', 'avatar', p ? (p.name || p.login || '?')[0].toUpperCase() : '');
+  if (p && safeAvatar(p.avatar)) {
     const im = document.createElement('img');
     im.src = p.avatar; im.alt = '';
     im.onerror = () => im.remove();
@@ -429,19 +497,24 @@ function renderProfile(data, earnedCount, total, tiersGot, tiersAll) {
   box.appendChild(av);
 
   const info = el('div', 'pinfo');
-  const nm = el('div', 'pname', p.name || p.login);
-  nm.appendChild(el('span', 'plogin', '@' + p.login));
+  const nm = el('div', 'pname', p ? (p.name || p.login) : '');
+  if (!p) nm.appendChild(el('span', 'skbar name'));
+  nm.appendChild(el('span', 'plogin', '@' + login));
   const gh = el('a', 'ghlink', 'View on GitHub \u2197');
-  gh.href = 'https://github.com/' + encodeURIComponent(p.login);
+  gh.href = 'https://github.com/' + encodeURIComponent(login);
   gh.target = '_blank'; gh.rel = 'noopener';
   nm.appendChild(gh);
   info.appendChild(nm);
-  if (p.bio) info.appendChild(el('div', 'pbio', p.bio));
   const meta = el('div', 'pmeta');
-  if (p.location) meta.appendChild(el('span', null, p.location));
-  if (p.createdAt) meta.appendChild(el('span', null, 'Joined ' + new Date(p.createdAt).getFullYear()));
-  meta.appendChild(el('span', null, num(p.followers) + (p.followers === 1 ? ' follower' : ' followers')));
-  meta.appendChild(el('span', null, num(p.following) + ' following'));
+  if (p) {
+    if (p.bio) info.appendChild(el('div', 'pbio', p.bio));
+    if (p.location) meta.appendChild(el('span', null, p.location));
+    if (p.createdAt) meta.appendChild(el('span', null, 'Joined ' + new Date(p.createdAt).getFullYear()));
+    meta.appendChild(el('span', null, num(p.followers) + (p.followers === 1 ? ' follower' : ' followers')));
+    meta.appendChild(el('span', null, num(p.following) + ' following'));
+  } else {
+    meta.appendChild(el('span', 'skbar bio'));
+  }
   info.appendChild(meta);
   box.appendChild(info);
 
@@ -471,7 +544,14 @@ function renderStats(data) {
     [s.yearContributions, 'Contributions, last year'],
     [streak, streakLabel],
   ].forEach(([v, label]) => {
-    if (v === undefined || v === null) return;
+    if (v === undefined || v === null) {
+      if (!data.notice) return;
+      const gap = el('div', 'stat miss');
+      gap.appendChild(el('b', null, '\u2013'));
+      gap.appendChild(el('span', null, label));
+      statsEl.appendChild(gap);
+      return;
+    }
     const box = el('div', 'stat');
     box.appendChild(el('b', null, typeof v === 'number' ? v.toLocaleString() : String(v)));
     box.appendChild(el('span', null, label));
@@ -481,6 +561,7 @@ function renderStats(data) {
 
 function renderExtras(data) {
   extrasEl.textContent = '';
+  const repoGone = !!(data.notice && data.notice.missing.includes('repos'));
   if (data.languages && data.languages.length) {
     const panel = el('div', 'panel');
     panel.appendChild(el('h3', null, 'Languages (by repo)'));
@@ -516,6 +597,8 @@ function renderExtras(data) {
     wrap.appendChild(legend);
     panel.appendChild(wrap);
     extrasEl.appendChild(panel);
+  } else if (repoGone) {
+    extrasEl.appendChild(missingPanel('Languages (by repo)', data.notice));
   }
   if (data.topRepos && data.topRepos.length) {
     const panel = el('div', 'panel');
@@ -532,6 +615,8 @@ function renderExtras(data) {
       panel.appendChild(row);
     });
     extrasEl.appendChild(panel);
+  } else if (repoGone) {
+    extrasEl.appendChild(missingPanel('Top repos', data.notice));
   }
 }
 
@@ -583,6 +668,7 @@ function render(data) {
     grid.appendChild(card);
   });
 
+  renderNotice(data);
   renderProfile(data, earnedCount, total, tiersGot, tiersAll);
   renderStats(data);
   renderExtras(data);
@@ -625,7 +711,9 @@ async function loadCatalog() {
 }
 
 function clearAll() {
-  [profileEl, statsEl, grid, extrasEl, hlEl, copyWrap].forEach((n) => { n.textContent = ''; });
+  [profileEl, statsEl, grid, extrasEl, hlEl, copyWrap, noticeEl].forEach((n) => { n.textContent = ''; });
+  noticeEl.hidden = true;
+  noticeUntil = 0;
   moreWrap.hidden = true;
   hlWrap.hidden = true;
 }
@@ -636,16 +724,171 @@ const liveEl = $('live'), liveText = $('liveText'), liveBtn = $('liveBtn');
 let seq = 0, liveTimer = null, lastFetchAt = 0, lastJson = '', lastData = null;
 let paused = false, failures = 0, refreshing = false;
 
+const SERVER_QUOTA = 5;
+const HOUR_MS = 36e5;
+const apiCache = new Map();
+let serverMode = false;
+
+function serverList() {
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem('bp-server') || '[]'); } catch (e) { list = []; }
+  const now = Date.now();
+  return Array.isArray(list) ? list.filter((x) => x && typeof x.u === 'string' && now - x.t < HOUR_MS) : [];
+}
+
+function serverUsed(user) {
+  return serverList().some((x) => x.u === user.toLowerCase());
+}
+
+function serverLeft() {
+  return Math.max(0, SERVER_QUOTA - serverList().length);
+}
+
+function useServerFor(user) {
+  const list = serverList();
+  if (!list.some((x) => x.u === user.toLowerCase())) list.push({ u: user.toLowerCase(), t: Date.now() });
+  try { localStorage.setItem('bp-server', JSON.stringify(list)); } catch (e) { /* storage unavailable */ }
+  serverMode = true;
+}
+
+async function ghJson(url) {
+  const r = await fetch(url, { headers: { Accept: 'application/vnd.github+json' } });
+  const out = r.headers.get('x-ratelimit-remaining') === '0';
+  if (r.status === 429 || (r.status === 403 && out)) {
+    const after = Number(r.headers.get('retry-after'));
+    const reset = Number(r.headers.get('x-ratelimit-reset'));
+    const secs = after > 0 ? after : reset > 0 ? Math.max(1, reset - Math.floor(Date.now() / 1000)) : 60;
+    const err = new Error('GitHub request limit reached');
+    err.limited = true;
+    err.retryAfter = Math.min(Math.ceil(secs), 3600);
+    throw err;
+  }
+  if (!r.ok) throw new Error('GitHub ' + r.status);
+  return r.json();
+}
+
+const settle = (p) => p.then((value) => ({ ok: true, value }), (error) => ({ ok: false, error }));
+
+async function loadApiParts(user) {
+  const base = 'https://api.github.com/';
+  const prof = await settle(ghJson(base + 'users/' + user));
+  const count = prof.ok ? prof.value.public_repos || 0 : 0;
+  const needed = Math.max(Math.ceil(count / 100), 1);
+  const pages = Math.min(needed, 20);
+  const calls = Array.from({ length: pages }, (_, i) =>
+    settle(ghJson(base + 'users/' + user + '/repos?per_page=100&type=owner&page=' + (i + 1))));
+  const [merged, yolo, ...rest] = await Promise.all([
+    settle(ghJson(base + 'search/issues?per_page=1&q=author:' + user + '+type:pr+is:merged')),
+    settle(ghJson(base + 'search/issues?per_page=1&q=author:' + user + '+type:pr+is:merged+review:none')),
+    ...calls,
+  ]);
+
+  const out = { profile: null, stats: {}, languages: [], topRepos: [], notice: null };
+  const failed = [];
+  const waits = [];
+  const note = (name, r) => {
+    if (r.ok) return;
+    if (name) failed.push(name);
+    if (r.error && r.error.limited) waits.push(r.error.retryAfter);
+  };
+  note('profile', prof);
+  note('merged', merged);
+  note('yolo', yolo);
+  note('repos', rest[0]);
+  rest.slice(1).forEach((r) => note(null, r));
+
+  if (prof.ok) {
+    const p = prof.value;
+    out.profile = {
+      login: p.login, name: p.name, bio: p.bio, location: p.location, avatar: p.avatar_url,
+      followers: p.followers, following: p.following, createdAt: p.created_at,
+    };
+    out.stats.publicRepos = p.public_repos;
+    out.stats.followers = p.followers;
+  }
+  out.stats.mergedPRs = merged.ok ? merged.value.total_count : null;
+  out.stats.yoloPRs = yolo.ok ? yolo.value.total_count : null;
+
+  if (rest[0].ok) {
+    const own = rest.filter((r) => r.ok).flatMap((r) => r.value).filter((r) => !r.fork);
+    const partial = rest.some((r) => !r.ok) || needed > pages || (!prof.ok && rest[0].value.length === 100);
+    out.stats.maxRepoStars = own.reduce((m, r) => Math.max(m, r.stargazers_count || 0), 0);
+    out.stats.totalStars = own.reduce((s, r) => s + (r.stargazers_count || 0), 0);
+    out.stats.totalStarsPartial = partial;
+    const langs = new Map();
+    own.forEach((r) => r.language && langs.set(r.language, (langs.get(r.language) || 0) + 1));
+    out.languages = [...langs].map(([name, n]) => ({ name, count: n })).sort((a, b) => b.count - a.count);
+    out.topRepos = own
+      .sort((a, b) =>
+        (b.stargazers_count - a.stargazers_count) ||
+        (!!b.description - !!a.description) ||
+        (new Date(b.pushed_at) - new Date(a.pushed_at)))
+      .slice(0, 3)
+      .map((r) => ({
+        name: r.name, stars: r.stargazers_count, language: r.language,
+        description: r.description, url: r.html_url,
+      }));
+  } else {
+    out.stats.maxRepoStars = null;
+    out.stats.totalStars = null;
+  }
+
+  if (failed.length) {
+    out.notice = {
+      kind: waits.length ? 'rate_limit' : 'unavailable',
+      retryAfter: waits.length ? Math.max(1, ...waits) : null,
+      missing: failed,
+      source: 'browser',
+    };
+  }
+  return out;
+}
+
+async function browserApi(user) {
+  const key = user.toLowerCase();
+  const now = Date.now();
+  const hit = apiCache.get(key);
+  if (hit && now < hit.until) {
+    if (!hit.value.notice || !hit.value.notice.retryAfter) return hit.value;
+    const left = Math.max(1, Math.ceil((hit.until - now) / 1000));
+    return Object.assign({}, hit.value, { notice: Object.assign({}, hit.value.notice, { retryAfter: left }) });
+  }
+  const value = await loadApiParts(user);
+  const n = value.notice;
+  const ttl = !n ? HOUR_MS : n.retryAfter ? n.retryAfter * 1000 : 60e3;
+  apiCache.set(key, { value, until: now + ttl });
+  return value;
+}
+
+function mergeApi(data, api) {
+  return Object.assign({}, data, {
+    profile: api.profile,
+    stats: Object.assign({}, data.stats, api.stats),
+    languages: api.languages,
+    topRepos: api.topRepos,
+    notice: api.notice || data.notice || null,
+  });
+}
+
 async function fetchData(user) {
   await loadCatalog();
-  const r = await fetch((window.API_BASE || '') + '/api/badges?user=' + encodeURIComponent(user));
+  const skip = serverMode ? '' : '&api=skip';
+  const r = await fetch((window.API_BASE || '') + '/api/badges?user=' + encodeURIComponent(user) + skip);
   const data = await r.json();
   if (!r.ok) {
     const err = new Error(data.error || 'Request failed (' + r.status + ')');
     err.status = r.status;
     throw err;
   }
-  return data;
+  if (serverMode) return data;
+  const merged = mergeApi(data, await browserApi(user));
+  const limited = merged.notice && merged.notice.kind === 'rate_limit' && merged.notice.source === 'browser';
+  if (!limited || serverLeft() === 0) return merged;
+  useServerFor(user);
+  const r2 = await fetch((window.API_BASE || '') + '/api/badges?user=' + encodeURIComponent(user));
+  const full = await r2.json();
+  if (!r2.ok) return merged;
+  return full;
 }
 
 // If GitHub's API hiccups, keep showing the last known numbers instead of blanking them.
@@ -674,6 +917,7 @@ function drawLive() {
 }
 
 function tickLive() {
+  drawNotice();
   const age = Date.now() - lastFetchAt;
   if (!paused && !document.hidden && !refreshing && age >= POLL_MS) refresh();
   drawLive();
@@ -710,6 +954,7 @@ async function refresh() {
       lastData = data;
       render(data);
     }
+    renderNotice(data);
     lastFetchAt = Date.now();
   } catch (e) {
     if (mine !== seq) return;
@@ -742,6 +987,7 @@ async function run(user, push) {
   busy(true);
   setStatus('Checking ' + user + '...');
   stopLive();
+  serverMode = serverUsed(user);
   try {
     const data = await fetchData(user);
     if (mine !== seq) return;

@@ -231,7 +231,7 @@ Full details and the reasons behind each choice are in [SECURITY.md](SECURITY.md
 - The local API validates usernames, and checks browser origins.
 - The local web server serves an explicit allowlist of frontend files.
 - Both the local web server and Vercel send a Content-Security-Policy, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` and `Cross-Origin-Opener-Policy`. Vercel also sends `Strict-Transport-Security`.
-- Requests to GitHub time out after 10 seconds. When GitHub says it is rate limiting, Badgepath stops calling that part of GitHub until the time GitHub gives, and shows saved results meanwhile.
+- Requests to GitHub time out after 10 seconds. When GitHub says it is rate limiting, Badgepath stops calling that part of GitHub until the time GitHub gives, and shows saved results meanwhile. The page first reads GitHub's API from the visitor's own browser (60 requests an hour each). When that limit is reached it uses the server for up to 5 lookups per hour, then shows a countdown. The page shows a notice with a countdown, greys out the parts it could not load, and loads them again when the countdown reaches zero.
 - Any optional GitHub token belongs in server-side environment variables only, and is never written to logs.
 - Errors log only their message, and visitors only ever see short generic error text.
 
