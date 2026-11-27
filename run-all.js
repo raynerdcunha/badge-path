@@ -5,7 +5,7 @@ const path = require('node:path');
 
 const procs = [
   { name: 'server', color: '\x1b[36m', file: path.join(__dirname, 'server', 'server.js') },
-  { name: 'web   ', color: '\x1b[32m', file: path.join(__dirname, 'web', 'serve.js') },
+  { name: 'web   ', color: '\x1b[32m', file: path.join(__dirname, 'web-server.js') },
 ];
 
 const children = procs.map((p) => {

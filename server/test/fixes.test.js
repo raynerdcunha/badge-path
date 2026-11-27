@@ -39,7 +39,7 @@ test('every file the web server allows exists, and vercel.json is valid', () => 
   const fs = require('node:fs');
   const path = require('node:path');
   const root = path.join(__dirname, '..', '..');
-  const src = fs.readFileSync(path.join(root, 'web', 'serve.js'), 'utf8');
+  const src = fs.readFileSync(path.join(root, 'web-server.js'), 'utf8');
   const list = /const PUBLIC = new Set\(\[(.*?)\]\);/s.exec(src)[1].match(/'([^']+)'/g).map((s) => s.slice(1, -1));
   assert.ok(list.length > 10);
   for (const f of list) assert.ok(fs.existsSync(path.join(root, 'web', f)), f);

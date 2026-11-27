@@ -67,7 +67,7 @@ node server/server.js
 Terminal 2 — web page:
 
 ```bash
-node web/serve.js
+node web-server.js
 ```
 
 The API listens on `http://localhost:3001` and the web page listens on `http://localhost:5173`.
@@ -178,37 +178,38 @@ Achievement artwork is loaded from GitHub's asset CDN, so an internet connection
 ```text
 badge-path/
 ├── api/
-│   ├── badges.js          # Vercel serverless badge lookup endpoint
-│   └── health.js          # Vercel health endpoint
+│   ├── badges.js                                         # Vercel serverless badge lookup endpoint
+│   └── health.js                                         # Vercel health endpoint
 ├── server/
-│   ├── server.js          # Local HTTP API server
-│   ├── .env.example       # Optional local configuration example
+│   ├── server.js                                         # Local HTTP API server
+│   ├── .env.example                                      # Optional local configuration example
 │   ├── src/
-│   │   ├── cache.js       # In-memory response cache
-│   │   └── github.js      # GitHub data retrieval, parsing and rate limit handling
-│   └── test/              # API and utility tests (github, server, fixes)
-├── web/
-│   ├── index.html         # Frontend page
-│   ├── app.js             # Search, rendering, and progress logic
-│   ├── style.css          # Interface styling
-│   ├── favicon.ico        # Fallback icon for crawlers and older browsers
-│   ├── config.js          # Frontend runtime configuration
-│   ├── badges.json        # Achievement catalogue and tier thresholds
-│   ├── logo-*.png         # Logos for the light and dark themes
-│   ├── favicon-64-*.png  # Browser tab icons (dark and light)
+│   │   ├── cache.js                                      # In-memory response cache
+│   │   └── github.js                                     # GitHub data retrieval, parsing and rate limit handling
+│   └── test/                                             # API and utility tests (github, server, fixes)
+├── web/                                                  # The published site: only files a visitor's browser needs
+│   ├── index.html                                        # Frontend page
+│   ├── app.js                                            # Search, rendering, and progress logic
+│   ├── style.css                                         # Interface styling
+│   ├── config.js                                         # Frontend runtime configuration
+│   ├── badges.json                                       # Achievement catalogue and tier thresholds
+│   ├── logo-*.png                                        # Logos for the light and dark themes
+│   ├── favicon.ico                                       # Fallback icon for crawlers and older browsers
+│   ├── favicon-64-*.png                                  # Browser tab icons (dark and light)
 │   ├── icon-*.png, apple-touch-icon.png, og-preview.png  # App icons and social preview
-│   ├── robots.txt, site.webmanifest  # Crawler rules and web app manifest
-│   ├── .well-known/security.txt  # How to report a security problem
-│   └── serve.js           # Local static web server
-├── .github/               # CI workflow, issue and pull request templates
-├── .gitattributes         # Keeps line endings consistent (LF)
-├── .vercelignore          # Repo-only files kept out of the deployment
-├── run-all.js             # Starts the local API and web servers
-├── start.bat              # Windows launcher
-├── package.json
-├── vercel.json            # Vercel deployment configuration and security headers
-├── LICENSE.md, NOTICE.md  # MIT license and what it does not cover
-└── SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md
+│   ├── robots.txt, site.webmanifest                      # Crawler rules and web app manifest
+│   └── .well-known/security.txt                          # How to report a security problem
+├── .github/                                              # CI workflow, issue and pull request templates
+├── .gitattributes                                        # Keeps line endings consistent (LF)
+├── .gitignore                                            # Files Git should not track
+├── .vercelignore                                         # Repo-only files kept out of the deployment
+├── web-server.js                                         # Local static web server for the web folder
+├── run-all.js                                            # Starts the local API and web servers
+├── start.bat                                             # Windows launcher
+├── package.json                                          # Scripts, Node version and project details
+├── vercel.json                                           # Vercel deployment configuration and security headers
+├── LICENSE.md, NOTICE.md                                 # MIT license and what it does not cover
+└── SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md      # Security policy, contribution guide, code of conduct
 ```
 
 ## 🧪 Tests

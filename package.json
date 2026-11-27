@@ -24,7 +24,7 @@
   "scripts": {
     "start": "node run-all.js",
     "server": "node server/server.js",
-    "web": "node web/serve.js",
+    "web": "node web-server.js",
     "test": "node --test server/test/fixes.test.js server/test/github.test.js server/test/server.test.js"
   },
   "engines": {
