@@ -462,7 +462,7 @@ function renderNotice(data) {
   body.appendChild(timer);
   noticeEl.appendChild(el('span', 'nicon', '!'));
   noticeEl.appendChild(body);
-  noticeUntil = Date.now() + (n.retryAfter ? n.retryAfter * 1000 : 30000);
+  noticeUntil = Date.now() + (n.retryAfter ? Math.max(10, n.retryAfter) * 1000 : 30000);
   drawNotice();
 }
 
@@ -836,7 +836,7 @@ async function loadApiParts(user) {
   if (failed.length) {
     out.notice = {
       kind: waits.length ? 'rate_limit' : 'unavailable',
-      retryAfter: waits.length ? Math.max(1, ...waits) : null,
+      retryAfter: waits.length ? Math.max(10, ...waits) : null,
       missing: failed,
       source: 'browser',
     };
